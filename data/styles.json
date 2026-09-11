@@ -1,0 +1,74 @@
+[
+  {
+    "id": "kurta",
+    "name": "Kurta",
+    "emoji": "👘",
+    "origin": "Pan-India",
+    "description": "A versatile long top worn by both men and women. Ranges from casual cotton daily wear to heavily embroidered formal pieces.",
+    "fabrics": ["Cotton", "Linen", "Silk", "Georgette", "Chanderi"],
+    "occasions": ["Casual", "Office", "Festival", "Wedding"],
+    "stitching_complexity": "Low–Medium",
+    "key_measurements": ["height", "chest", "shoulder", "sleeveLength"],
+    "notes": "Length typically falls between hip and knee. Slit on sides from hip down is standard."
+  },
+  {
+    "id": "blouse_saree",
+    "name": "Blouse (Saree)",
+    "emoji": "🥻",
+    "origin": "Pan-India",
+    "description": "The fitted upper garment worn with a saree. Highly customisable — back design, neckline, sleeve style are all variable.",
+    "fabrics": ["Silk", "Brocade", "Cotton", "Net", "Velvet"],
+    "occasions": ["Wedding", "Festival", "Formal"],
+    "stitching_complexity": "High",
+    "key_measurements": ["chest", "waist", "shoulder", "sleeveLength"],
+    "notes": "Typically 15–18 cm below bust. Blouse back length and hook count are tailor-critical measurements."
+  },
+  {
+    "id": "ghagra",
+    "name": "Ghagra / Lehenga",
+    "emoji": "👗",
+    "origin": "Rajasthan / Gujarat",
+    "description": "A full, flared skirt paired with a blouse and dupatta. Grand volume and heavy embellishment make it a staple for weddings and festivals.",
+    "fabrics": ["Silk", "Net", "Velvet", "Brocade", "Organza"],
+    "occasions": ["Wedding", "Festival", "Grand Events"],
+    "stitching_complexity": "High",
+    "key_measurements": ["waist", "hip", "height"],
+    "notes": "Flare is determined by the number of panels (kalis). Standard is 8–16 panels. Waist band is critical."
+  },
+  {
+    "id": "daily_wear",
+    "name": "Daily Wear Dress",
+    "emoji": "👚",
+    "origin": "Pan-India",
+    "description": "Simple, comfortable dresses for everyday use — A-line cuts, straight cuts, or wrap styles in breathable fabrics.",
+    "fabrics": ["Cotton", "Linen", "Khadi", "Jersey", "Rayon"],
+    "occasions": ["Casual", "Home", "Office (Informal)"],
+    "stitching_complexity": "Low",
+    "key_measurements": ["height", "chest", "waist", "hip"],
+    "notes": "Ease allowance of 3–5 cm is recommended for comfort. Avoid structured interfacing for casual wear."
+  },
+  {
+    "id": "anarkali",
+    "name": "Anarkali Suit",
+    "emoji": "🌸",
+    "origin": "Mughal Era / North India",
+    "description": "A long, flowing flared kurta with fitted bodice and flared skirt silhouette, paired with churidar or palazzo pants.",
+    "fabrics": ["Georgette", "Chiffon", "Silk", "Crepe", "Net"],
+    "occasions": ["Wedding", "Festival", "Semi-Formal"],
+    "stitching_complexity": "Medium–High",
+    "key_measurements": ["height", "chest", "waist", "hip", "shoulder"],
+    "notes": "Floor-length Anarkalis need accurate heel height to determine final hem. Flare starts at the waist or empire line."
+  },
+  {
+    "id": "salwar_kameez",
+    "name": "Salwar Kameez",
+    "emoji": "🧥",
+    "origin": "Punjab / Pan-India",
+    "description": "A three-piece set: kameez (top), salwar (trouser), and dupatta. One of the most common daily and semi-formal outfits.",
+    "fabrics": ["Cotton", "Linen", "Silk", "Georgette", "Chanderi"],
+    "occasions": ["Casual", "Office", "Festival", "Formal"],
+    "stitching_complexity": "Low–Medium",
+    "key_measurements": ["height", "chest", "waist", "hip", "shoulder", "sleeveLength"],
+    "notes": "Salwar crotch depth and kameez length relative to hip are the two most critical tailoring points."
+  }
+]

@@ -1,0 +1,19 @@
+# ── Web framework ─────────────────────────────────────────
+fastapi==0.111.1
+uvicorn[standard]==0.30.3
+python-multipart==0.0.9        # required for file uploads
+
+# ── Image processing  (Member 5) ──────────────────────────
+Pillow==10.4.0
+opencv-python-headless==4.10.0.84
+rembg==2.0.57                  # background / distraction removal
+
+# ── AI / Watson  (Member 3 & 4) ───────────────────────────
+ibm-watson==8.1.0              # Watson Assistant SDK
+ibm-cloud-sdk-core==3.20.3
+requests==2.32.3               # HTTP calls to watsonx.ai REST API
+
+# ── Utilities ─────────────────────────────────────────────
+python-dotenv==1.0.1           # load .env file
+pydantic==2.8.2                # data validation (bundled with FastAPI but pinned)
+aiofiles==23.2.1               # async file I/O for serving generated files

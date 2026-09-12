@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Environment } from "@react-three/drei";
 import { useStudioStore } from "@/store/studioStore";
 import { generateMesh } from "@/lib/api";
+import { fireBobMessage } from "@/hooks/useBobProactive";
 
 interface Props {
   onNext: () => void;
@@ -47,6 +48,20 @@ export default function MeshViewer({ onNext, onBack }: Props) {
       try {
         const result = await generateMesh(measurements, selectedStyle, enhancedImage);
         setMeshUrl(result.gltf_url);
+        // Tell BOB the mesh is ready — fires a fabric suggestion nudge
+        const { skinTone, measurements: m } = useStudioStore.getState();
+        const heightNote =
+          m && m.height < 155 ? " Since you're petite, lighter fabrics will drape better."
+          : m && m.height > 170 ? " Your height suits dramatic floor-length styles perfectly."
+          : "";
+        fireBobMessage({
+          text: `Your 3D model is ready! 🎉${heightNote}\n\nWant me to suggest the best fabric for this style based on your skin tone?`,
+          quickReplies: [
+            skinTone ? `Suggest fabrics for ${skinTone.displayName} skin` : "Suggest fabrics",
+            "What colours work for me?",
+            "How does this look for a wedding?",
+          ],
+        });
       } catch (err) {
         setError("Could not generate mesh. Showing placeholder preview.");
       } finally {

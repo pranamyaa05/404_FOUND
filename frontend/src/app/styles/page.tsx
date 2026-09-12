@@ -1,4 +1,4 @@
-import stylesData from "../../../data/styles.json";
+import stylesData from "../../data/styles.json";
 
 /**
  * /styles — Informational page listing all dress styles

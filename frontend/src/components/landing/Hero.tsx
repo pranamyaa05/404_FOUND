@@ -18,10 +18,16 @@ export default function Hero() {
         <Link href="/studio" className="btn-primary text-lg">
           Start Designing →
         </Link>
+        <Link href="/suggest" className="btn-outline text-lg border-primary-light text-primary-light hover:bg-primary hover:border-primary hover:text-white">
+          Ask BOB ✨
+        </Link>
         <Link href="/styles" className="btn-outline text-lg border-white text-white hover:bg-white hover:text-surface-dark">
           Explore Styles
         </Link>
       </div>
+      <p className="text-gray-600 text-sm mt-8">
+        BOB is always here — click the avatar at the bottom-right to chat.
+      </p>
     </section>
   );
 }

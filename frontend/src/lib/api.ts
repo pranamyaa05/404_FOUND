@@ -58,7 +58,9 @@ export interface RecommendResult {
   recommendations: {
     style: string;
     fabric: string;
+    colors?: string[];
     reason: string;
+    confidence?: "high" | "medium";
   }[];
 }
 
@@ -78,17 +80,52 @@ export async function getRecommendations(
 // ─────────────────────────────────────────────────────────
 // Chatbot  (Owner: Member 3 & 4)
 // ─────────────────────────────────────────────────────────
+
+export interface BobUserContext {
+  skin_tone_label?: string;       // e.g. "wheatish"
+  skin_tone_display?: string;     // e.g. "Wheatish"
+  height_cm?: number;
+  chest_cm?: number;
+  waist_cm?: number;
+  hip_cm?: number;
+  selected_style?: string;        // e.g. "kurta"
+  occasion?: string;              // e.g. "wedding"
+  current_step?: number;          // 0–4, which studio step they're on
+}
+
 export async function chat(
   message: string,
-  sessionId?: string
-): Promise<{ reply: string; session_id: string }> {
+  sessionId?: string,
+  userContext?: BobUserContext
+): Promise<{ reply: string; session_id: string; recommendations?: import("@/components/chatbot/RecommendationCard").Recommendation[] }> {
   const res = await fetch(`${BASE}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, session_id: sessionId }),
+    body: JSON.stringify({
+      message,
+      session_id: sessionId,
+      user_context: userContext ?? {},
+    }),
   });
 
   if (!res.ok) throw new Error(`chat failed: ${res.status}`);
+  return res.json();
+}
+
+// ─────────────────────────────────────────────────────────
+// Proactive BOB message — called by the app, not the user
+// ─────────────────────────────────────────────────────────
+export async function getBobProactiveMessage(
+  trigger: string,
+  userContext?: BobUserContext
+): Promise<{ reply: string }> {
+  const res = await fetch(`${BASE}/bob-proactive`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ trigger, user_context: userContext ?? {} }),
+  });
+
+  if (!res.ok) throw new Error(`bob-proactive failed: ${res.status}`);
   return res.json();
 }
 

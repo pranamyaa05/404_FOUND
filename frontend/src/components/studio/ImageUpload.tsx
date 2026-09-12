@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useStudioStore } from "@/store/studioStore";
 import { enhanceImage } from "@/lib/api";
+import { fireBobMessage } from "@/hooks/useBobProactive";
 
 interface Props {
   onNext: () => void;
@@ -45,6 +46,11 @@ export default function ImageUpload({ onNext, onBack }: Props) {
         const enhanced = await enhanceImage(file);
         setEnhancedImage(enhanced.enhanced_image_url);
         setEnhancedPreview(enhanced.enhanced_image_url);
+        // Tell BOB the image is clean — nudge toward measurements
+        fireBobMessage({
+          text: "Image cleaned up! ✨ Now let's get your measurements so I can build a perfectly fitted 3D preview.",
+          quickReplies: ["How to measure chest?", "How to measure waist?"],
+        });
       } catch (err) {
         setError("Enhancement failed. You can still continue with the original.");
       } finally {

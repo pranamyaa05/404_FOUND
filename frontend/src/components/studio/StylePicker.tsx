@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import clsx from "clsx";
 import { useStudioStore } from "@/store/studioStore";
+import { fireBobMessage } from "@/hooks/useBobProactive";
 import stylesData from "../../../../data/styles.json";
 
 interface Props {
@@ -18,6 +18,17 @@ export default function StylePicker({ onNext }: Props) {
 
   const handleSelect = (styleId: string) => {
     setSelectedStyle(styleId);
+  };
+
+  const handleContinue = () => {
+    if (!selectedStyle) return;
+    // Tell BOB the user picked a style — fired before navigating forward
+    const picked = stylesData.find((s) => s.id === selectedStyle);
+    fireBobMessage({
+      text: `${picked?.name ?? "Great"} — solid choice! 🎨 Let's upload a reference photo next. A clear photo on a plain background works best.`,
+      quickReplies: ["Tips for a good photo", "What is image enhancement?"],
+    });
+    onNext();
   };
 
   return (
@@ -47,7 +58,7 @@ export default function StylePicker({ onNext }: Props) {
       </div>
 
       <button
-        onClick={onNext}
+        onClick={handleContinue}
         disabled={!selectedStyle}
         className="btn-primary w-full"
       >

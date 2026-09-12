@@ -43,3 +43,36 @@
     @apply w-3 h-3 rounded-full transition-all duration-300;
   }
 }
+
+/* ── Skin tone slider custom thumb ───────────────────────────────── */
+.skin-tone-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.skin-tone-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+.skin-tone-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.skin-tone-slider::-webkit-slider-runnable-track {
+  background: transparent;
+}
+.skin-tone-slider::-moz-range-track {
+  background: transparent;
+}

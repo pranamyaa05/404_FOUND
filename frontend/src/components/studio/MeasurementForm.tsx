@@ -2,6 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { useStudioStore } from "@/store/studioStore";
+import SkinToneSelector from "@/components/studio/SkinToneSelector";
+import { fireBobMessage } from "@/hooks/useBobProactive";
 
 interface Props {
   onNext: () => void;
@@ -38,6 +40,19 @@ export default function MeasurementForm({ onNext, onBack }: Props) {
 
   const onSubmit = (data: MeasurementValues) => {
     setMeasurements(data);
+    // Tell BOB measurements are locked in — he'll use them from the store
+    const { skinTone, selectedStyle } = useStudioStore.getState();
+    const styleLabel = selectedStyle?.replace(/_/g, " ") ?? "your chosen style";
+    const heightNote =
+      data.height < 155
+        ? "Since you're petite, I'll make sure to flag any fabric that might overwhelm your silhouette."
+        : data.height > 170
+        ? "Your height is great for floor-length styles — I'll keep that in mind!"
+        : "";
+    fireBobMessage({
+      text: `Got it! ${skinTone ? `${skinTone.displayName} skin tone` : ""} + **${data.height} cm** + **${styleLabel}** — generating your 3D model now. ${heightNote}`.trim(),
+      quickReplies: [],
+    });
     onNext();
   };
 
@@ -54,6 +69,9 @@ export default function MeasurementForm({ onNext, onBack }: Props) {
     <div className="card bg-gray-900 border border-gray-700">
       <h2 className="text-2xl font-bold mb-2">Enter Your Measurements</h2>
       <p className="text-gray-400 mb-8">All measurements are in centimetres (cm).</p>
+
+      {/* Skin tone dragger — BOB reads this, no need to ask */}
+      <SkinToneSelector />
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">

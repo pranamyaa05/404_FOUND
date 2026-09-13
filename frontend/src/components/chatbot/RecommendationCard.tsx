@@ -1,8 +1,5 @@
 /**
- * RecommendationCard — rendered inline inside BOB's message list.
- *
- * Shown when BOB calls /recommend and gets style+fabric combos back.
- * Each card shows style name, fabric, a colour suggestion, and the reason.
+ * RecommendationCard — styled as torn-out pages from the Master Tailor's personal sketchbook.
  */
 
 export interface Recommendation {
@@ -15,27 +12,27 @@ export interface Recommendation {
 
 // Map style names to emoji for quick visual scanning
 const STYLE_EMOJI: Record<string, string> = {
-  Kurta: "👘",
-  "Ghagra / Lehenga": "👗",
-  Ghagra: "👗",
-  Lehenga: "👗",
-  "Blouse (Saree)": "🥻",
-  "Anarkali Suit": "🌸",
-  "Salwar Kameez": "🧥",
-  "Daily Wear Dress": "👚",
-  default: "✨",
+  Kurta: "",
+  "Ghagra / Lehenga": "",
+  Ghagra: "",
+  Lehenga: "",
+  "Blouse (Saree)": "",
+  "Anarkali Suit": "",
+  "Salwar Kameez": "",
+  "Daily Wear Dress": "",
+  default: "",
 };
 
 const FABRIC_COLOR: Record<string, string> = {
-  Silk: "from-amber-500/20 to-yellow-400/10 border-amber-500/30",
-  Cotton: "from-sky-500/20 to-blue-400/10 border-sky-500/30",
-  Georgette: "from-pink-500/20 to-rose-400/10 border-pink-500/30",
-  Chiffon: "from-purple-500/20 to-violet-400/10 border-purple-500/30",
-  Linen: "from-green-500/20 to-emerald-400/10 border-green-500/30",
-  Brocade: "from-orange-500/20 to-amber-400/10 border-orange-500/30",
-  Velvet: "from-red-500/20 to-rose-400/10 border-red-500/30",
-  Net: "from-cyan-500/20 to-teal-400/10 border-cyan-500/30",
-  default: "from-violet-500/20 to-purple-400/10 border-violet-500/30",
+  Silk: "from-[#e0b57f]/30 to-[#e0b57f]/5 border-[#a9803f]/35",
+  Cotton: "from-[#7a97ad]/25 to-[#7a97ad]/5 border-[#4e6c82]/30",
+  Georgette: "from-[#c7777b]/25 to-[#c7777b]/5 border-[#a94e38]/30",
+  Chiffon: "from-primary/15 to-primary/5 border-primary/25",
+  Linen: "from-accent/25 to-accent/5 border-accent/35",
+  Brocade: "from-[#a94e38]/25 to-[#a94e38]/5 border-[#833b2b]/30",
+  Velvet: "from-[#754333]/25 to-[#754333]/5 border-[#754333]/35",
+  Net: "from-[#69785d]/20 to-[#69785d]/5 border-[#506148]/30",
+  default: "from-accent/10 to-accent/5 border-accent/20",
 };
 
 interface Props {
@@ -53,28 +50,30 @@ export default function RecommendationCard({ recommendations }: Props) {
         return (
           <div
             key={i}
-            className={`bg-gradient-to-br ${gradient} border rounded-xl p-3 w-full`}
+            className={`relative bg-gradient-to-br ${gradient} border border-dashed rounded-xl p-4 w-full`}
           >
+            {/* Sketchbook torn edge */}
+            <div className="absolute top-0 left-0 w-1 h-full bg-[repeating-linear-gradient(180deg,transparent_0_4px,rgba(107,76,50,0.15)_4px_8px)]" />
             {/* Header row */}
             <div className="flex items-start justify-between gap-2 mb-1">
               <div className="flex items-center gap-2">
                 <span className="text-xl">{emoji}</span>
                 <div>
-                  <p className="text-white font-semibold text-sm leading-tight">
+                  <p className="text-surface-dark font-serif italic text-base leading-tight">
                     {rec.style}
                   </p>
-                  <p className="text-gray-300 text-xs">{rec.fabric}</p>
+                  <p className="text-surface-dark/80 text-xs">{rec.fabric}</p>
                 </div>
               </div>
               {rec.confidence && (
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
                     rec.confidence === "high"
-                      ? "bg-green-500/20 text-green-300"
-                      : "bg-yellow-500/20 text-yellow-300"
+                      ? "bg-[#69785d]/25 text-[#3f4a38]"
+                      : "bg-[#e0b57f]/35 text-[#6d4530]"
                   }`}
                 >
-                  {rec.confidence === "high" ? "★ Top pick" : "Good match"}
+                  {rec.confidence === "high" ? "Tailor's choice" : "Fine match"}
                 </span>
               )}
             </div>
@@ -85,7 +84,7 @@ export default function RecommendationCard({ recommendations }: Props) {
                 {rec.colors.map((c) => (
                   <span
                     key={c}
-                    className="text-[10px] bg-white/10 text-gray-200 px-2 py-0.5 rounded-full"
+                    className="text-[10px] bg-surface-dark/10 text-surface-dark px-2 py-0.5 rounded-full"
                   >
                     {c}
                   </span>
@@ -94,7 +93,7 @@ export default function RecommendationCard({ recommendations }: Props) {
             )}
 
             {/* Reason */}
-            <p className="text-gray-300 text-xs leading-relaxed">{rec.reason}</p>
+            <p className="text-surface-dark/80 text-xs leading-relaxed">{rec.reason}</p>
           </div>
         );
       })}

@@ -9,22 +9,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Brand palette — feel free to update
+        // Warm Atelier Palette
         primary: {
-          DEFAULT: "#6C3FC5", // deep violet
-          light: "#9B6DFF",
-          dark: "#4A2A8A",
+          DEFAULT: "#a94e38", // rust
+          light: "#c46751",
+          dark: "#833b2b", // rust2
         },
         accent: {
-          DEFAULT: "#F5A623", // warm amber
+          DEFAULT: "#69785d", // sage
         },
         surface: {
-          DEFAULT: "#F9F7FF",
-          dark: "#1A1025",
+          DEFAULT: "#fbf5e9", // lightest background
+          cream: "#eee4d1",
+          paper: "#f2e8d6",
+          dark: "#29231d", // ink
         },
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ["DM Sans", "sans-serif"],
+        serif: ["Cormorant Garamond", "serif"],
       },
     },
   },

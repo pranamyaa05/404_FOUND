@@ -66,24 +66,26 @@ export default function MeasurementForm({ onNext, onBack }: Props) {
   ];
 
   return (
-    <div className="card bg-gray-900 border border-gray-700">
-      <h2 className="text-2xl font-bold mb-2">Enter Your Measurements</h2>
-      <p className="text-gray-400 mb-8">All measurements are in centimetres (cm).</p>
+    <div className="card">
+      <h2 className="font-serif italic text-3xl text-surface-dark mb-2">Enter Your Measurements</h2>
+      <p className="text-surface-dark/60 mb-8">All measurements are in centimetres (cm).</p>
 
       {/* Skin tone dragger — BOB reads this, no need to ask */}
       <SkinToneSelector />
+
+      <div className="stitch-divider mb-6" />
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
           {fields.map((f) => (
             <div key={f.name}>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-surface-dark/80 mb-1">
                 {f.label}
               </label>
               <input
                 type="number"
                 step="0.1"
-                className="input-field bg-gray-800 border-gray-600 text-white"
+                className="input-field"
                 {...register(f.name, {
                   required: "Required",
                   min: { value: f.min, message: `Min ${f.min} cm` },
@@ -92,7 +94,7 @@ export default function MeasurementForm({ onNext, onBack }: Props) {
                 })}
               />
               {errors[f.name] && (
-                <p className="text-red-400 text-xs mt-1">
+                <p className="text-red-500 text-xs mt-1">
                   {errors[f.name]?.message}
                 </p>
               )}

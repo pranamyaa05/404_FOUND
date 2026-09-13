@@ -9,7 +9,7 @@ import RecommendationCard, {
 } from "@/components/chatbot/RecommendationCard";
 import clsx from "clsx";
 
-// ─── Message types ────────────────────────────────────────────────────────────
+//  Message types 
 
 type MessageRole = "user" | "bob";
 
@@ -41,13 +41,13 @@ interface QuickReplyMessage {
 
 type Message = TextMessage | RecommendMessage | QuickReplyMessage;
 
-// ─── Quick reply sets BOB uses contextually ───────────────────────────────────
+//  Quick reply sets BOB uses contextually 
 
 const INITIAL_QUICK_REPLIES = [
-  "Suggest me a style 🎨",
-  "Which fabric should I use? 🧵",
-  "How does this app work? 🗺️",
-  "I'm a tailor 📐",
+  "Suggest me a style",
+  "Which fabric suits me best?",
+  "How does this atelier work?",
+  "I'm a tailor myself",
 ];
 
 const STEP_QUICK_REPLIES: Record<number, string[]> = {
@@ -58,23 +58,23 @@ const STEP_QUICK_REPLIES: Record<number, string[]> = {
   4: ["How to read die-lines?", "What is seam allowance?"],
 };
 
-// ─── ID generator ─────────────────────────────────────────────────────────────
+//  ID generator 
 
 let _msgId = 0;
 const newId = () => `msg-${++_msgId}`;
 
-// ─── BOB's opening message ────────────────────────────────────────────────────
+//  BOB's opening message 
 
 const WELCOME_MESSAGE: QuickReplyMessage = {
   id: "welcome",
   role: "bob",
   type: "quick_replies",
-  text: "Hey! I'm BOB — Built On IBM 🎨✨\nI'm your personal fashion designer AI. I know Indian ethnic wear inside out — styles, fabrics, cuts, the works.\n\nWhat can I do for you today?",
+  text: "Welcome to my atelier. I'm BOB — your Master Tailor.\nI know Indian ethnic wear inside out — silhouettes, fabrics, draping, the works.\n\nHow may I assist you today?",
   replies: INITIAL_QUICK_REPLIES,
   timestamp: new Date(),
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+//  Component 
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -90,21 +90,21 @@ export default function ChatWidget() {
 
   const getBobContext = useStudioStore((s) => s.getBobContext);
 
-  // ── Scroll to bottom whenever messages change ─────────────────────
+  //  Scroll to bottom whenever messages change 
   useEffect(() => {
     if (isOpen && !isMinimised) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isOpen, isMinimised]);
 
-  // ── Focus input when panel opens ──────────────────────────────────
+  //  Focus input when panel opens 
   useEffect(() => {
     if (isOpen && !isMinimised) {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen, isMinimised]);
 
-  // ── Build user context from studioStore ───────────────────────────
+  //  Build user context from studioStore 
   const buildContext = useCallback((): BobUserContext => {
     const ctx = getBobContext();
     return {
@@ -120,7 +120,7 @@ export default function ChatWidget() {
     };
   }, [getBobContext]);
 
-  // ── Core send function ────────────────────────────────────────────
+  //  Core send function 
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
@@ -189,7 +189,7 @@ export default function ChatWidget() {
           id: newId(),
           role: "bob",
           type: "text",
-          text: "Hmm, I lost connection for a second 😅 Try again in a moment!",
+          text: "The thread snapped for a moment. Try again shortly.",
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, errMsg]);
@@ -209,7 +209,7 @@ export default function ChatWidget() {
   const handleClose = () => setIsOpen(false);
   const handleMinimise = () => setIsMinimised((m) => !m);
 
-  // ── Inject a proactive message from outside (used by studio page) ──
+  //  Inject a proactive message from outside (used by studio page) 
   // Exposed via a custom event so studio steps can nudge BOB without prop drilling
   useEffect(() => {
     const msgHandler = (e: CustomEvent<{ text: string; quickReplies?: string[] }>) => {
@@ -239,26 +239,26 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* ── Floating toggle button ─────────────────────────────────── */}
+      {/*  Floating toggle button  */}
       <button
         onClick={isOpen ? handleClose : handleOpen}
         className={clsx(
           "fixed bottom-6 right-6 z-50 rounded-full shadow-2xl transition-all duration-300",
           "hover:scale-110 active:scale-95",
           isOpen
-            ? "w-10 h-10 bg-gray-800 border border-gray-600 flex items-center justify-center"
+            ? "w-10 h-10 bg-surface-cream border border-surface-dark/20 flex items-center justify-center"
             : "w-16 h-16 bg-transparent p-0.5"
         )}
-        aria-label={isOpen ? "Close BOB" : "Open BOB — AI Fashion Designer"}
+        aria-label={isOpen ? "Close BOB" : "Open BOB — Master Tailor"}
       >
         {isOpen ? (
-          <span className="text-gray-300 text-lg">✕</span>
+          <span className="text-surface-dark/80 text-lg"></span>
         ) : (
           <div className="relative">
             <BobAvatar size={64} animated />
             {/* Unread badge */}
             {hasUnread && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-gray-900 animate-bounce" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-surface animate-bounce" />
             )}
             {/* Pulsing ring */}
             <span className="absolute inset-0 rounded-full ring-2 ring-primary/50 animate-ping opacity-30 pointer-events-none" />
@@ -266,40 +266,40 @@ export default function ChatWidget() {
         )}
       </button>
 
-      {/* ── Chat panel ────────────────────────────────────────────── */}
+      {/*  Chat panel  */}
       {isOpen && (
         <div
           className={clsx(
             "fixed bottom-24 right-6 z-50",
             "w-[340px] sm:w-[400px]",
-            "bg-[#0D0A1A] border border-purple-900/50 rounded-2xl shadow-[0_8px_60px_rgba(108,63,197,0.35)]",
+            "bg-surface border border-surface-dark/15 rounded-2xl shadow-[0_8px_60px_rgba(41,35,29,0.2)]",
             "flex flex-col overflow-hidden",
             "transition-all duration-300",
             isMinimised ? "h-[64px]" : "h-[580px]"
           )}
         >
-          {/* ── Header ─────────────────────────────────────────────── */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#1A1025] to-[#2D1B69] border-b border-purple-900/40 shrink-0">
+          {/*  Header  */}
+          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-surface-paper to-surface-cream border-b border-dashed border-surface-dark/20 shrink-0">
             <div className="relative shrink-0">
               <BobAvatar size={36} />
               {/* Online dot */}
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-[#0D0A1A]" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-surface-paper" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-white font-bold text-sm">BOB</span>
-                <span className="text-[10px] bg-primary/30 text-primary-light px-1.5 py-0.5 rounded-full font-medium">
-                  AI Fashion Designer
+                <span className="text-surface-dark font-serif italic font-semibold text-base">BOB</span>
+                <span className="text-[10px] bg-primary/15 text-primary-dark px-1.5 py-0.5 rounded-full font-medium">
+                  Master Tailor
                 </span>
               </div>
-              <p className="text-gray-400 text-[10px] truncate">
-                Powered by IBM Watson &amp; watsonx.ai
+              <p className="text-surface-dark/50 text-[10px] truncate">
+                Your bespoke fitting-room companion
               </p>
             </div>
             {/* Minimise / maximise */}
             <button
               onClick={handleMinimise}
-              className="text-gray-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+              className="text-surface-dark/60 hover:text-surface-dark transition-colors p-1 rounded-lg hover:bg-surface-dark/10"
               aria-label={isMinimised ? "Expand chat" : "Minimise chat"}
             >
               {isMinimised ? (
@@ -314,12 +314,12 @@ export default function ChatWidget() {
             </button>
           </div>
 
-          {/* ── Context ribbon — shows what BOB already knows ─────── */}
+          {/*  Context ribbon — shows what BOB already knows  */}
           {!isMinimised && <ContextRibbon />}
 
-          {/* ── Message list ───────────────────────────────────────── */}
+          {/*  Message list  */}
           {!isMinimised && (
-            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 scrollbar-thin scrollbar-thumb-purple-900/40">
+            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 scrollbar-thin scrollbar-thumb-surface-dark/20 bg-surface">
               {messages.map((msg) => (
                 <MessageBubble
                   key={msg.id}
@@ -332,12 +332,12 @@ export default function ChatWidget() {
               {isTyping && (
                 <div className="flex items-end gap-2">
                   <BobAvatar size={24} />
-                  <div className="bg-[#1A1025] border border-purple-900/30 px-3 py-2 rounded-2xl rounded-bl-none">
+                  <div className="bg-surface-paper border border-surface-dark/10 px-3 py-2 rounded-2xl rounded-bl-none">
                     <div className="flex gap-1 items-center h-4">
                       {[0, 1, 2].map((i) => (
                         <span
                           key={i}
-                          className="w-1.5 h-1.5 bg-primary-light rounded-full animate-bounce"
+                          className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"
                           style={{ animationDelay: `${i * 0.15}s` }}
                         />
                       ))}
@@ -349,9 +349,9 @@ export default function ChatWidget() {
             </div>
           )}
 
-          {/* ── Input bar ──────────────────────────────────────────── */}
+          {/*  Input bar  */}
           {!isMinimised && (
-            <div className="border-t border-purple-900/30 px-3 py-3 bg-[#0D0A1A] shrink-0">
+            <div className="border-t border-dashed border-surface-dark/20 px-3 py-3 bg-surface-paper shrink-0">
               <div className="flex gap-2 items-center">
                 <input
                   ref={inputRef}
@@ -359,10 +359,10 @@ export default function ChatWidget() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-                  placeholder="Ask BOB anything about fashion..."
+                  placeholder="Ask the Master Tailor..."
                   className={clsx(
-                    "flex-1 bg-[#1A1025] text-white text-sm rounded-xl px-3 py-2.5",
-                    "placeholder:text-gray-600 border border-purple-900/30",
+                    "flex-1 bg-surface text-surface-dark text-sm rounded-xl px-3 py-2.5",
+                    "placeholder:text-surface-dark/40 border border-surface-dark/15",
                     "outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30",
                     "transition-all"
                   )}
@@ -372,7 +372,7 @@ export default function ChatWidget() {
                   disabled={!input.trim() || isTyping}
                   className={clsx(
                     "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all",
-                    "bg-primary hover:bg-primary-light active:scale-90",
+                    "bg-primary hover:bg-primary-dark active:scale-90",
                     "disabled:opacity-30 disabled:cursor-not-allowed"
                   )}
                   aria-label="Send message"
@@ -390,7 +390,7 @@ export default function ChatWidget() {
   );
 }
 
-// ─── Context Ribbon ───────────────────────────────────────────────────────────
+//  Context Ribbon 
 // Shows what BOB already knows so user feels understood, not interrogated.
 
 function ContextRibbon() {
@@ -398,21 +398,21 @@ function ContextRibbon() {
   const items: { icon: string; label: string }[] = [];
 
   if (skinTone)
-    items.push({ icon: "🎨", label: skinTone.displayName });
+    items.push({ icon: "", label: skinTone.displayName });
   if (measurements?.height)
-    items.push({ icon: "📏", label: `${measurements.height} cm` });
+    items.push({ icon: "", label: `${measurements.height} cm` });
   if (selectedStyle)
-    items.push({ icon: "👗", label: selectedStyle.replace("_", " ") });
+    items.push({ icon: "", label: selectedStyle.replace("_", " ") });
 
   if (items.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-950/40 border-b border-purple-900/20 overflow-x-auto shrink-0">
-      <span className="text-[10px] text-gray-500 shrink-0">BOB knows:</span>
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-cream/60 border-b border-dashed border-surface-dark/15 overflow-x-auto shrink-0">
+      <span className="text-[10px] text-surface-dark/50 shrink-0 font-serif italic">In the ledger:</span>
       {items.map((item) => (
         <span
           key={item.label}
-          className="text-[10px] bg-primary/15 text-primary-light px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1"
+          className="text-[10px] bg-primary/15 text-primary-dark px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1"
         >
           {item.icon} {item.label}
         </span>
@@ -421,7 +421,7 @@ function ContextRibbon() {
   );
 }
 
-// ─── Message Bubble ───────────────────────────────────────────────────────────
+//  Message Bubble 
 
 interface BubbleProps {
   message: Message;
@@ -444,7 +444,7 @@ function MessageBubble({ message, onQuickReply }: BubbleProps) {
               "px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap",
               isUser
                 ? "bg-primary text-white rounded-br-none"
-                : "bg-[#1A1025] border border-purple-900/30 text-gray-100 rounded-bl-none"
+                : "bg-surface-paper border border-surface-dark/10 text-surface-dark rounded-bl-none"
             )}
           >
             {message.type === "text"
@@ -468,9 +468,9 @@ function MessageBubble({ message, onQuickReply }: BubbleProps) {
                 key={r}
                 onClick={() => onQuickReply(r)}
                 className={clsx(
-                  "text-[11px] px-3 py-1 rounded-full border transition-all",
-                  "border-primary/40 text-primary-light bg-primary/10",
-                  "hover:bg-primary hover:text-white hover:border-primary",
+                  "text-[11px] px-3 py-1 rounded-full border border-dashed transition-all",
+                  "border-primary/40 text-primary-dark bg-primary/10",
+                  "hover:bg-primary hover:text-white hover:border-primary hover:border-solid",
                   "active:scale-95"
                 )}
               >
@@ -481,7 +481,7 @@ function MessageBubble({ message, onQuickReply }: BubbleProps) {
         )}
 
         {/* Timestamp */}
-        <span className="text-[9px] text-gray-600 px-1">
+        <span className="text-[9px] text-surface-dark/40 px-1">
           {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
       </div>

@@ -79,7 +79,7 @@ export default function SkinToneSelector() {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <label className="text-sm font-medium text-gray-300">
+        <label className="font-serif italic text-lg text-surface-dark/90">
           Skin Tone
         </label>
         {/* Live swatch + label */}
@@ -89,7 +89,7 @@ export default function SkinToneSelector() {
             style={{ backgroundColor: current.hex }}
             aria-label={`Selected skin tone: ${current.displayName}`}
           />
-          <span className="text-sm text-gray-300 font-medium min-w-[90px]">
+          <span className="text-sm text-surface-dark/80 font-medium min-w-[90px]">
             {current.displayName}
           </span>
         </div>
@@ -141,7 +141,7 @@ export default function SkinToneSelector() {
         ))}
       </div>
 
-      <p className="text-xs text-gray-500 mt-2">
+      <p className="text-xs text-surface-dark/50 mt-2">
         BOB uses this to personalise fabric and colour suggestions for you.
       </p>
     </div>

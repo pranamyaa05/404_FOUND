@@ -46,7 +46,7 @@ export default function MeshViewer({ onNext, onBack }: Props) {
       setIsLoading(true);
       setError(null);
       try {
-        const result = await generateMesh(measurements, selectedStyle, enhancedImage);
+        const result = await generateMesh(measurements as unknown as Record<string, number>, selectedStyle, enhancedImage);
         setMeshUrl(result.gltf_url);
         // Tell BOB the mesh is ready — fires a fabric suggestion nudge
         const { skinTone, measurements: m } = useStudioStore.getState();
@@ -55,7 +55,7 @@ export default function MeshViewer({ onNext, onBack }: Props) {
           : m && m.height > 170 ? " Your height suits dramatic floor-length styles perfectly."
           : "";
         fireBobMessage({
-          text: `Your 3D model is ready! 🎉${heightNote}\n\nWant me to suggest the best fabric for this style based on your skin tone?`,
+          text: `Your 3D model is ready! ${heightNote}\n\nWant me to suggest the best fabric for this style based on your skin tone?`,
           quickReplies: [
             skinTone ? `Suggest fabrics for ${skinTone.displayName} skin` : "Suggest fabrics",
             "What colours work for me?",
@@ -73,20 +73,20 @@ export default function MeshViewer({ onNext, onBack }: Props) {
   }, [measurements, selectedStyle, enhancedImage, setMeshUrl]);
 
   return (
-    <div className="card bg-gray-900 border border-gray-700">
-      <h2 className="text-2xl font-bold mb-2">3D Preview</h2>
-      <p className="text-gray-400 mb-6">
+    <div className="card">
+      <h2 className="font-serif italic text-3xl text-surface-dark mb-2">3D Preview</h2>
+      <p className="text-surface-dark/60 mb-6">
         Rotate and inspect your dress on a 3D body model.
       </p>
 
       {isLoading && (
-        <div className="flex items-center justify-center h-64 text-gray-400 animate-pulse">
+        <div className="flex items-center justify-center h-64 text-surface-dark/60 animate-pulse font-serif italic">
           Generating 3D mesh via Blender...
         </div>
       )}
 
       {!isLoading && (
-        <div className="w-full h-[500px] rounded-xl overflow-hidden bg-gray-800 mb-6">
+        <div className="w-full h-[500px] rounded-xl overflow-hidden bg-surface-cream border border-dashed border-surface-dark/20 mb-6">
           <Canvas camera={{ position: [0, 1, 4], fov: 50 }}>
             <ambientLight intensity={0.6} />
             <directionalLight position={[5, 10, 5]} intensity={1} />
@@ -100,7 +100,7 @@ export default function MeshViewer({ onNext, onBack }: Props) {
       )}
 
       {error && (
-        <p className="text-yellow-400 text-sm mb-4">{error}</p>
+        <p className="text-yellow-600 text-sm mb-4">{error}</p>
       )}
 
       <div className="flex gap-4">

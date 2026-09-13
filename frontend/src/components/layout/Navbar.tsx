@@ -19,12 +19,12 @@ export default function Navbar() {
   const navLinks = [
     { href: "/studio",  label: "Studio" },
     { href: "/styles",  label: "Style Guide" },
-    { href: "/suggest", label: "Ask BOB ✨" },
+    { href: "/suggest", label: "Ask BOB " },
   ];
 
   const handleAskBob = () => {
     fireBobMessage({
-      text: "Hey! I'm BOB 🎨 What can I help you with today?",
+      text: "Hey! I'm BOB  What can I help you with today?",
       quickReplies: [
         "Suggest me a style",
         "Which fabric should I use?",
@@ -37,28 +37,28 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 bg-[#0D0A1A]/90 backdrop-blur-md border-b border-purple-900/30">
+    <nav className="fixed top-0 left-0 right-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/40 shadow-sm supports-[backdrop-filter]:bg-surface/40">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <span className="text-2xl">🧵</span>
-          <span className="text-white font-extrabold text-xl tracking-tight">
-            Stitch<span className="text-primary-light">Smart</span>
+        <Link href="/" className="flex items-center gap-2.5 group hover:opacity-80 transition-opacity">
+          <span className="text-2xl drop-shadow-sm">✨</span>
+          <span className="text-surface-dark font-serif font-semibold text-2xl tracking-tight">
+            Stitch<span className="text-primary font-normal italic">Smart</span>
           </span>
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden md:flex items-center gap-3">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-medium transition-all",
+                "px-4 py-2 rounded-full text-sm font-medium transition-all font-sans border shadow-sm",
                 pathname === link.href
-                  ? "bg-primary/20 text-primary-light"
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white/50 border-surface-dark/10 text-surface-dark hover:bg-surface-dark hover:text-white"
               )}
             >
               {link.label}
@@ -69,17 +69,17 @@ export default function Navbar() {
         {/* Ask BOB button — desktop */}
         <button
           onClick={handleAskBob}
-          className="hidden md:flex items-center gap-2 bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary-light text-sm font-semibold px-4 py-2 rounded-xl transition-all"
+          className="hidden md:flex items-center gap-2 bg-white/50 hover:bg-surface-dark border border-surface-dark/20 hover:border-surface-dark text-surface-dark hover:text-white text-sm font-semibold px-4 py-2 rounded-full shadow-sm transition-all"
           aria-label="Open BOB AI assistant"
         >
           <BobAvatar size={22} />
-          <span>Chat with BOB</span>
+          <span className="font-serif italic">Chat with BOB</span>
         </button>
 
         {/* Mobile: hamburger */}
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="md:hidden text-gray-400 hover:text-white p-2"
+          className="md:hidden text-surface-dark p-2"
           aria-label="Toggle menu"
         >
           <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor">
@@ -98,17 +98,17 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-purple-900/30 bg-[#0D0A1A] px-4 py-3 flex flex-col gap-1">
+        <div className="md:hidden border-t border-surface-dark/10 bg-surface px-4 py-3 flex flex-col gap-1 shadow-md">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setMenuOpen(false)}
               className={clsx(
-                "px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                "px-4 py-3 rounded-xl text-sm font-medium transition-all font-sans",
                 pathname === link.href
-                  ? "bg-primary/20 text-primary-light"
-                  : "text-gray-300 hover:text-white hover:bg-white/5"
+                  ? "bg-primary/10 text-primary-dark"
+                  : "text-surface-dark/80 hover:text-surface-dark hover:bg-surface-dark/5"
               )}
             >
               {link.label}
@@ -116,7 +116,7 @@ export default function Navbar() {
           ))}
           <button
             onClick={() => { handleAskBob(); setMenuOpen(false); }}
-            className="flex items-center gap-2 mt-2 px-4 py-3 rounded-xl bg-primary/20 text-primary-light text-sm font-semibold"
+            className="flex items-center gap-2 mt-2 px-4 py-3 rounded-xl bg-primary/10 text-primary-dark text-sm font-semibold font-sans"
           >
             <BobAvatar size={20} />
             Chat with BOB

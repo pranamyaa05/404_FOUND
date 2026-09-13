@@ -9,9 +9,9 @@
 
 const BASE = "/api"; // proxied to BACKEND_URL via next.config.js
 
-// ─────────────────────────────────────────────────────────
+// 
 // Image Enhancement  (Owner: Member 5)
-// ─────────────────────────────────────────────────────────
+// 
 export async function enhanceImage(
   file: File
 ): Promise<{ enhanced_image_url: string }> {
@@ -27,9 +27,9 @@ export async function enhanceImage(
   return res.json();
 }
 
-// ─────────────────────────────────────────────────────────
+// 
 // Mesh + Die-line Generation  (Owner: Member 1 & 2)
-// ─────────────────────────────────────────────────────────
+// 
 export async function generateMesh(
   measurements: Record<string, number>,
   style: string,
@@ -45,9 +45,9 @@ export async function generateMesh(
   return res.json();
 }
 
-// ─────────────────────────────────────────────────────────
+// 
 // AI Style & Fabric Recommendation  (Owner: Member 3 & 4)
-// ─────────────────────────────────────────────────────────
+// 
 export interface RecommendInput {
   skin_tone: "fair" | "wheatish" | "dark";
   height_cm: number;
@@ -77,9 +77,9 @@ export async function getRecommendations(
   return res.json();
 }
 
-// ─────────────────────────────────────────────────────────
+// 
 // Chatbot  (Owner: Member 3 & 4)
-// ─────────────────────────────────────────────────────────
+// 
 
 export interface BobUserContext {
   skin_tone_label?: string;       // e.g. "wheatish"
@@ -112,9 +112,9 @@ export async function chat(
   return res.json();
 }
 
-// ─────────────────────────────────────────────────────────
+// 
 // Proactive BOB message — called by the app, not the user
-// ─────────────────────────────────────────────────────────
+// 
 export async function getBobProactiveMessage(
   trigger: string,
   userContext?: BobUserContext
@@ -129,9 +129,9 @@ export async function getBobProactiveMessage(
   return res.json();
 }
 
-// ─────────────────────────────────────────────────────────
+// 
 // Dress Styles Info  (shared data)
-// ─────────────────────────────────────────────────────────
+// 
 export async function getStyles() {
   const res = await fetch(`${BASE}/styles`);
   if (!res.ok) throw new Error(`styles failed: ${res.status}`);

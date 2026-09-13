@@ -2,7 +2,7 @@
   {
     "id": "kurta",
     "name": "Kurta",
-    "emoji": "👘",
+    "emoji": "",
     "origin": "Pan-India",
     "description": "A versatile long top worn by both men and women. Ranges from casual cotton daily wear to heavily embroidered formal pieces.",
     "fabrics": ["Cotton", "Linen", "Silk", "Georgette", "Chanderi"],
@@ -14,7 +14,7 @@
   {
     "id": "blouse_saree",
     "name": "Blouse (Saree)",
-    "emoji": "🥻",
+    "emoji": "",
     "origin": "Pan-India",
     "description": "The fitted upper garment worn with a saree. Highly customisable — back design, neckline, sleeve style are all variable.",
     "fabrics": ["Silk", "Brocade", "Cotton", "Net", "Velvet"],
@@ -26,7 +26,7 @@
   {
     "id": "ghagra",
     "name": "Ghagra / Lehenga",
-    "emoji": "👗",
+    "emoji": "",
     "origin": "Rajasthan / Gujarat",
     "description": "A full, flared skirt paired with a blouse and dupatta. Grand volume and heavy embellishment make it a staple for weddings and festivals.",
     "fabrics": ["Silk", "Net", "Velvet", "Brocade", "Organza"],
@@ -38,7 +38,7 @@
   {
     "id": "daily_wear",
     "name": "Daily Wear Dress",
-    "emoji": "👚",
+    "emoji": "",
     "origin": "Pan-India",
     "description": "Simple, comfortable dresses for everyday use — A-line cuts, straight cuts, or wrap styles in breathable fabrics.",
     "fabrics": ["Cotton", "Linen", "Khadi", "Jersey", "Rayon"],
@@ -50,7 +50,7 @@
   {
     "id": "anarkali",
     "name": "Anarkali Suit",
-    "emoji": "🌸",
+    "emoji": "",
     "origin": "Mughal Era / North India",
     "description": "A long, flowing flared kurta with fitted bodice and flared skirt silhouette, paired with churidar or palazzo pants.",
     "fabrics": ["Georgette", "Chiffon", "Silk", "Crepe", "Net"],
@@ -62,7 +62,7 @@
   {
     "id": "salwar_kameez",
     "name": "Salwar Kameez",
-    "emoji": "🧥",
+    "emoji": "",
     "origin": "Punjab / Pan-India",
     "description": "A three-piece set: kameez (top), salwar (trouser), and dupatta. One of the most common daily and semi-formal outfits.",
     "fabrics": ["Cotton", "Linen", "Silk", "Georgette", "Chanderi"],

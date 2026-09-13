@@ -31,12 +31,13 @@ _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 _UPLOADS_DIR = os.path.join(_BACKEND_DIR, "uploads")
 _TEMP_DIR    = os.path.join(_BACKEND_DIR, "temp")
 
+# Create them immediately so StaticFiles mount doesn't fail
+os.makedirs(_UPLOADS_DIR, exist_ok=True)
+os.makedirs(_TEMP_DIR, exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create upload/temp directories on startup."""
-    os.makedirs(_UPLOADS_DIR, exist_ok=True)
-    os.makedirs(_TEMP_DIR, exist_ok=True)
+    """Lifecycle events on startup/shutdown."""
     logger.info("StitchSmart backend starting up.")
     logger.info("uploads dir : %s", _UPLOADS_DIR)
     logger.info("temp dir    : %s", _TEMP_DIR)

@@ -30,7 +30,7 @@ export function fireBobMessage(payload: ProactivePayload) {
   window.dispatchEvent(new CustomEvent("bob:proactive", { detail: payload }));
 }
 
-// ─── Step entry messages ─────────────────────────────────────────────────────
+//  Step entry messages 
 
 function getStepMessage(
   step: number,
@@ -45,14 +45,14 @@ function getStepMessage(
   switch (step) {
     case 0:
       return {
-        text: "Welcome to the Studio! 🎨 Let's start by picking a dress style.\nNot sure which one? I've got opinions 😄",
+        text: "Welcome to the Studio!  Let's start by picking a dress style.\nNot sure which one? I've got opinions ",
         quickReplies: ["What style suits me?", "Explain each style", "What's a Ghagra?"],
       };
 
     case 1:
       return {
         text: style
-          ? `Nice choice — **${style}**! 👌\n\nNow upload a reference photo of the design you have in mind. Clear photos on plain backgrounds work best — I'll clean it up either way.`
+          ? `Nice choice — **${style}**! \n\nNow upload a reference photo of the design you have in mind. Clear photos on plain backgrounds work best — I'll clean it up either way.`
           : "Now upload a reference photo of your dress design. The clearer the better — I'll handle the rest.",
         quickReplies: ["What makes a good photo?", "Can I use a sketch?"],
       };
@@ -63,7 +63,7 @@ function getStepMessage(
       if (style) contextParts.push(`you're going for a **${style}**`);
 
       const intro = contextParts.length > 0
-        ? `${contextParts.join(", ")} — I'll keep all of that in mind for fabric and colour suggestions! 🧵`
+        ? `${contextParts.join(", ")} — I'll keep all of that in mind for fabric and colour suggestions! `
         : "Time to enter your measurements — all in centimetres.";
 
       return {
@@ -80,14 +80,14 @@ function getStepMessage(
         heightNote = "\n\nYour height is perfect for dramatic floor-length styles — Anarkali and full Ghagra will look stunning on you.";
       }
       return {
-        text: `Here's your 3D preview! 🎉 Rotate it, zoom in, check the fit from all angles.${heightNote}`,
+        text: `Here's your 3D preview!  Rotate it, zoom in, check the fit from all angles.${heightNote}`,
         quickReplies: ["Suggest a fabric for this style", "How does this look for a wedding?", "Explain the silhouette"],
       };
     }
 
     case 4:
       return {
-        text: "Your tailor-ready pattern is ready! 📐\n\nEach panel includes a **1.5 cm seam allowance**. Print at **1:1 scale** and cut directly on the lines — no extra margin needed.",
+        text: "Your tailor-ready pattern is ready! \n\nEach panel includes a **1.5 cm seam allowance**. Print at **1:1 scale** and cut directly on the lines — no extra margin needed.",
         quickReplies: ["Explain the panels", "What is seam allowance?", "How do I hand this to a tailor?"],
       };
 
@@ -96,32 +96,32 @@ function getStepMessage(
   }
 }
 
-// ─── Idle nudge messages ─────────────────────────────────────────────────────
+//  Idle nudge messages 
 
 const IDLE_MESSAGES: Record<number, ProactivePayload> = {
   0: {
-    text: "Still deciding on a style? I can help! Tell me the occasion and I'll narrow it down for you. 😄",
+    text: "Still deciding on a style? I can help! Tell me the occasion and I'll narrow it down for you. ",
     quickReplies: ["Help me choose", "What's best for a wedding?", "What's most popular?"],
   },
   1: {
-    text: "Having trouble with the photo? Even a photo of a dress on a hanger works well. I'll isolate the design. 📸",
+    text: "Having trouble with the photo? Even a photo of a dress on a hanger works well. I'll isolate the design. ",
     quickReplies: ["What file formats work?", "Can I use a screenshot?"],
   },
   2: {
-    text: "Measurements can be tricky — want me to walk you through each one step by step? 📏",
+    text: "Measurements can be tricky — want me to walk you through each one step by step? ",
     quickReplies: ["Yes, walk me through it", "Which measurement matters most?"],
   },
   3: {
-    text: "The 3D preview might take a moment if the backend is still processing. In the meantime — want fabric suggestions for this style? 🧵",
+    text: "The 3D preview might take a moment if the backend is still processing. In the meantime — want fabric suggestions for this style? ",
     quickReplies: ["Suggest fabrics", "What colours suit me?"],
   },
   4: {
-    text: "Ready to take the pattern to your tailor? I can explain what each panel means if that helps! 📐",
+    text: "Ready to take the pattern to your tailor? I can explain what each panel means if that helps! ",
     quickReplies: ["Explain the panels", "What should I tell my tailor?"],
   },
 };
 
-// ─── Hook ────────────────────────────────────────────────────────────────────
+//  Hook 
 
 const STEP_DELAY_MS  = 1500;  // wait before step entry message
 const IDLE_DELAY_MS  = 30000; // 30 s idle before nudge
@@ -134,11 +134,11 @@ export function useBobProactive(currentStep: number) {
   const idleTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // ── Clear previous timers on step change ─────────────────────────
+    //  Clear previous timers on step change 
     if (stepTimerRef.current) clearTimeout(stepTimerRef.current);
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
 
-    // ── Step entry message ────────────────────────────────────────────
+    //  Step entry message 
     if (!firedSteps.current.has(currentStep)) {
       stepTimerRef.current = setTimeout(() => {
         const ctx     = getBobContext();
@@ -150,7 +150,7 @@ export function useBobProactive(currentStep: number) {
       }, STEP_DELAY_MS);
     }
 
-    // ── Idle nudge ────────────────────────────────────────────────────
+    //  Idle nudge 
     if (!firedIdleSteps.current.has(currentStep)) {
       idleTimerRef.current = setTimeout(() => {
         const idlePayload = IDLE_MESSAGES[currentStep];

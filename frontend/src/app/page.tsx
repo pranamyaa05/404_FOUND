@@ -1,6 +1,5 @@
 import Hero from "@/components/landing/Hero";
 import HowItWorks from "@/components/landing/HowItWorks";
-import StylesSection from "@/components/landing/StylesSection";
 
 /**
  * Landing page — shown when user visits "/"
@@ -11,7 +10,6 @@ export default function HomePage() {
     <main>
       <Hero />
       <HowItWorks />
-      <StylesSection />
     </main>
   );
 }

@@ -26,32 +26,32 @@ export interface BobContext {
 }
 
 interface StudioState {
-  // ── Step 0 ───────────────────────────────────────────────────────
+  //  Step 0 
   selectedStyle: string | null;
   setSelectedStyle: (style: string) => void;
 
-  // ── Step 1 ───────────────────────────────────────────────────────
+  //  Step 1 
   originalImage: File | null;
   enhancedImage: string | null;
   setOriginalImage: (file: File) => void;
   setEnhancedImage: (url: string) => void;
 
-  // ── Step 2 — Measurements + Skin Tone ────────────────────────────
+  //  Step 2 — Measurements + Skin Tone 
   measurements: MeasurementValues | null;
   setMeasurements: (m: MeasurementValues) => void;
 
   skinTone: SkinToneValue | null;
   setSkinTone: (tone: SkinToneValue) => void;
 
-  // ── Step 3 ───────────────────────────────────────────────────────
+  //  Step 3 
   meshUrl: string | null;
   setMeshUrl: (url: string) => void;
 
-  // ── Step 4 ───────────────────────────────────────────────────────
+  //  Step 4 
   dieLineUrl: string | null;
   setDieLineUrl: (url: string) => void;
 
-  // ── Shared / BOB context ─────────────────────────────────────────
+  //  Shared / BOB context 
   currentStep: number;
   setCurrentStep: (step: number) => void;
 
@@ -62,7 +62,7 @@ interface StudioState {
   // Returns null for any field the user hasn't filled yet.
   getBobContext: () => BobContext;
 
-  // ── Reset ─────────────────────────────────────────────────────────
+  //  Reset 
   reset: () => void;
 }
 

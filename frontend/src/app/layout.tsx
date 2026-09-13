@@ -16,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-surface text-gray-900 antialiased">
+      <body className="bg-surface text-surface-dark antialiased">
         {/* Fixed navbar — 64px height, so all pages get pt-16 */}
         <Navbar />
         <div className="pt-16">

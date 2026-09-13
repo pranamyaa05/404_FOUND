@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,39 +10,154 @@
   }
 
   body {
-    @apply bg-surface text-gray-900;
+    @apply bg-surface text-surface-dark;
+    font-family: "DM Sans", sans-serif;
+    position: relative;
+  }
+
+  /* Fine paper grain over the whole app, echoing the Hero stage texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+  }
+
+  h1, h2, h3 {
+    font-family: "Cormorant Garamond", serif;
   }
 }
 
 @layer components {
-  /* Reusable card style */
+  /* ── Card: a swatch of paper pinned at the corner, dashed like a stitch line ── */
   .card {
-    @apply bg-white rounded-2xl shadow-md p-6;
+    @apply relative rounded-[14px] p-6;
+    background: linear-gradient(160deg, #f8f0e0, #ecdec3);
+    border: 1px solid rgba(41, 35, 29, 0.14);
+    box-shadow: 3px 10px 22px rgba(32, 24, 15, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border: 1px dashed rgba(89, 69, 47, 0.22);
+    border-radius: 9px;
+    pointer-events: none;
+  }
+  .card::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 22px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #e0b57f, #9a6840);
+    box-shadow: inset 0 0 0 1px rgba(49, 29, 15, 0.45), 1px 2px 4px rgba(24, 15, 8, 0.35);
   }
 
-  /* Primary button */
+  /* Primary button — echoes the hero's stitched CTA */
   .btn-primary {
-    @apply bg-primary text-white font-semibold px-6 py-3 rounded-xl 
-           hover:bg-primary-dark transition-colors duration-200 
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply relative inline-flex items-center justify-center gap-2 rounded-[10px] px-6 py-3
+           transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0;
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-size: 18px;
+    color: #31281f;
+    background: linear-gradient(180deg, #f5ecdc, #e2d3ba);
+    border: 1px solid rgba(70, 53, 36, 0.28);
+    box-shadow: 0 6px 14px rgba(53, 39, 25, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 11px 22px rgba(53, 39, 25, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.75);
   }
 
   /* Secondary / outline button */
   .btn-outline {
-    @apply border-2 border-primary text-primary font-semibold px-6 py-3 
-           rounded-xl hover:bg-primary hover:text-white transition-colors duration-200;
+    @apply rounded-[10px] px-6 py-3 transition-all duration-200;
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-size: 18px;
+    color: #31281f;
+    background: transparent;
+    border: 1px solid rgba(41, 35, 29, 0.35);
+  }
+  .btn-outline:hover {
+    background: rgba(41, 35, 29, 0.06);
+    border-color: rgba(41, 35, 29, 0.55);
   }
 
-  /* Input field */
+  /* Input field — paper-toned, thread-colour focus ring */
   .input-field {
-    @apply w-full border border-gray-300 rounded-xl px-4 py-3 
-           focus:outline-none focus:ring-2 focus:ring-primary/50 
-           focus:border-primary transition;
+    @apply w-full rounded-[8px] px-4 py-3 text-surface-dark transition;
+    background: #fbf5e9;
+    border: 1px solid rgba(41, 35, 29, 0.2);
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: #a94e38;
+    box-shadow: 0 0 0 3px rgba(169, 78, 56, 0.15);
   }
 
   /* Step indicator dot */
   .step-dot {
     @apply w-3 h-3 rounded-full transition-all duration-300;
+  }
+
+  /* Pinked-edge tag, like a fabric-content label */
+  .swatch-tag {
+    @apply inline-block text-xs px-2.5 py-1;
+    font-family: "DM Sans", sans-serif;
+    color: #6d4530;
+    background: #f1e3cd;
+    clip-path: polygon(
+      4% 0%, 96% 0%, 100% 20%, 96% 40%, 100% 60%, 96% 80%, 100% 100%,
+      4% 100%, 0% 80%, 4% 60%, 0% 40%, 4% 20%
+    );
+  }
+
+  /* Section eyebrow, matching the hero's italic rule-flanked label */
+  .eyebrow-thread {
+    @apply inline-flex items-center gap-4;
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-size: 20px;
+    color: #53483b;
+  }
+  .eyebrow-thread::before,
+  .eyebrow-thread::after {
+    content: "";
+    width: 32px;
+    height: 1px;
+    background: #786a58;
+    opacity: 0.6;
+  }
+
+  /* Stitched horizontal divider */
+  .stitch-divider {
+    height: 1px;
+    background-image: repeating-linear-gradient(
+      90deg, rgba(41, 35, 29, 0.35) 0 8px, transparent 8px 16px
+    );
+  }
+
+  /* Thread-spool badge used for numbered sequences */
+  .spool-badge {
+    @apply relative flex items-center justify-center rounded-full shrink-0;
+    width: 44px;
+    height: 44px;
+  }
+  .spool-badge::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px dashed rgba(41, 35, 29, 0.25);
   }
 }
 

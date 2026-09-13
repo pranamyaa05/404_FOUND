@@ -7,6 +7,7 @@ python-multipart==0.0.9        # required for file uploads
 Pillow==10.4.0
 opencv-python-headless==4.10.0.84
 rembg==2.0.69                  # background / distraction removal
+mediapipe==0.10.14             # body landmark detection for garment isolation
 
 # ── AI / Watson  (Member 3 & 4) ───────────────────────────
 ibm-watson==11.2.0              # Watson Assistant SDK

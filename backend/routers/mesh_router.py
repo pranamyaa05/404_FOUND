@@ -14,6 +14,9 @@ Endpoint:
 Implementation is in services/mesh_service.py and blender-scripts/
 """
 
+import logging
+import traceback
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -21,6 +24,7 @@ from services import mesh_service
 from typing import Optional
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class MeshRequest(BaseModel):
@@ -49,6 +53,12 @@ async def generate_mesh(body: MeshRequest):
     Generate a 3D GLTF mesh and a 2D SVG die-line pattern
     using a headless Blender pipeline.
     """
+    logger.info(
+        "[mesh-router] /generate-mesh request: style=%s image_url=%s measurements_keys=%s",
+        body.style,
+        body.enhanced_image_url,
+        list(body.measurements.keys()),
+    )
     try:
         result = mesh_service.generate(
             measurements=body.measurements,
@@ -56,8 +66,14 @@ async def generate_mesh(body: MeshRequest):
             image_url=body.enhanced_image_url,
         )
     except Exception as e:
+        # Log the full traceback so the real cause is visible in the backend terminal
+        logger.error(
+            "[mesh-router] /generate-mesh FAILED:\n%s",
+            traceback.format_exc(),
+        )
         raise HTTPException(status_code=500, detail=f"Mesh generation failed: {str(e)}")
 
+    logger.info("[mesh-router] /generate-mesh success: %s", result)
     return JSONResponse(content=result)
     # Expected response shape:
     # {

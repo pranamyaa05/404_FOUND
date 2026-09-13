@@ -5,10 +5,12 @@ Owner: Member 5
 
 Pipeline:
     1. Use rembg to remove background / isolate the dress
-    2. Use OpenCV to sharpen and clean up the result
-    3. Save final PNG to output_path
+    2. [NEW] garment_service.isolate_garment() — privacy-preserving removal
+       of face, hands, and non-garment body parts via MediaPipe Pose.
+    3. Use OpenCV to sharpen and clean up the result
+    4. Save final PNG to output_path
 
-Dependencies: rembg, Pillow, opencv-python-headless
+Dependencies: rembg, Pillow, opencv-python-headless, mediapipe
 """
 
 import io
@@ -16,6 +18,8 @@ import cv2
 import numpy as np
 from PIL import Image
 from rembg import remove
+
+from services import garment_service
 
 
 def enhance(image_bytes: bytes, output_path: str) -> None:
@@ -34,6 +38,11 @@ def enhance(image_bytes: bytes, output_path: str) -> None:
     # ── Step 2: Load result into PIL → numpy for OpenCV processing ─────
     pil_image = Image.open(io.BytesIO(cleaned_bytes)).convert("RGBA")
     np_image = np.array(pil_image)
+
+    # ── Step 2b: Garment isolation — remove face/hands/legs (privacy) ──
+    # isolate_garment() returns the original array unchanged on any error,
+    # so this step never causes the pipeline to fail.
+    np_image = garment_service.isolate_garment(np_image)
 
     # ── Step 3: Sharpen the RGB channels ──────────────────────────────
     rgb = cv2.cvtColor(np_image[:, :, :3], cv2.COLOR_RGB2BGR)

@@ -12,13 +12,21 @@ Endpoint:
 Implementation is in services/image_service.py
 """
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-from services import image_service
+import logging
+import traceback
 import uuid
 import os
 
+from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse
+from services import image_service
+
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+# Absolute path to the temp directory — safe regardless of uvicorn launch directory
+_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMP_DIR = os.path.join(_BACKEND_DIR, "temp")
 
 
 @router.post("/enhance-image")
@@ -27,6 +35,8 @@ async def enhance_image(file: UploadFile = File(...)):
     Upload a dress reference image (PNG or JPG).
     Returns a URL to the enhanced (distraction-free) version.
     """
+    logger.info("[image-router] /enhance-image received: %s (%s)", file.filename, file.content_type)
+
     # Validate file type
     if file.content_type not in ("image/png", "image/jpeg"):
         raise HTTPException(
@@ -36,13 +46,22 @@ async def enhance_image(file: UploadFile = File(...)):
 
     # Read uploaded bytes
     image_bytes = await file.read()
+    logger.info("[image-router] image bytes read: %d bytes", len(image_bytes))
+
+    # Ensure output directory exists
+    os.makedirs(TEMP_DIR, exist_ok=True)
 
     # Run enhancement pipeline
     try:
         output_filename = f"{uuid.uuid4().hex}_enhanced.png"
-        output_path = os.path.join("temp", output_filename)
+        output_path = os.path.join(TEMP_DIR, output_filename)
+        logger.info("[image-router] saving enhanced image to: %s", output_path)
         image_service.enhance(image_bytes, output_path)
+        if not os.path.exists(output_path):
+            raise RuntimeError(f"enhance() completed but output file not found at: {output_path}")
+        logger.info("[image-router] enhanced image saved successfully: %s", output_path)
     except Exception as e:
+        logger.error("[image-router] /enhance-image FAILED:\n%s", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Enhancement failed: {str(e)}")
 
     return JSONResponse(

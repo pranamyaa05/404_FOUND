@@ -12,12 +12,18 @@ const nextConfig = {
       },
     ],
   },
-  // Proxy /api/* calls to the FastAPI backend so frontend doesn't need CORS config
+  // Proxy /api/* and /files/* calls to the FastAPI backend
   async rewrites() {
+    const backend = process.env.BACKEND_URL || "http://localhost:8000";
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.BACKEND_URL || "http://localhost:8000"}/:path*`,
+        destination: `${backend}/:path*`,
+      },
+      // Proxy static generated files (enhanced images, GLTF, SVG) from the backend
+      {
+        source: "/files/:path*",
+        destination: `${backend}/files/:path*`,
       },
     ];
   },

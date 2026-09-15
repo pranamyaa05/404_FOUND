@@ -70,7 +70,7 @@ def _get_mp_pose():
         try:
             import mediapipe as mp  # type: ignore
             _mp_pose = mp.solutions.pose
-        except ImportError:
+        except (ImportError, AttributeError):
             _mp_pose = None
     return _mp_pose
 

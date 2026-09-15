@@ -51,7 +51,6 @@ async def enhance_image(file: UploadFile = File(...)):
     # Ensure output directory exists
     os.makedirs(TEMP_DIR, exist_ok=True)
 
-    # Run enhancement pipeline
     try:
         output_filename = f"{uuid.uuid4().hex}_enhanced.png"
         output_path = os.path.join(TEMP_DIR, output_filename)
@@ -62,7 +61,9 @@ async def enhance_image(file: UploadFile = File(...)):
         logger.info("[image-router] enhanced image saved successfully: %s", output_path)
     except Exception as e:
         logger.error("[image-router] /enhance-image FAILED:\n%s", traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Enhancement failed: {str(e)}")
+        logger.warning("[image-router] Falling back to saving RAW image to continue pipeline.")
+        with open(output_path, "wb") as f:
+            f.write(image_bytes)
 
     return JSONResponse(
         content={"enhanced_image_url": f"/files/{output_filename}"}

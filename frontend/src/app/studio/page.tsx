@@ -183,7 +183,7 @@ export default function StudioPage() {
       <div style={{ position: "relative", zIndex: 1, paddingBottom: "60px" }}>
         {currentStep === 0 && <StylePicker onNext={next} />}
         {currentStep === 1 && (
-          <div className="mt-12 relative z-10 max-w-4xl mx-auto px-4"><ImageUpload onNext={next} onBack={back} /></div>
+          <div className="mt-12 relative z-10 max-w-4xl mx-auto px-4"><ImageUpload onNext={next} onBack={back} onSkipToMesh={() => setCurrentStep(3)} /></div>
         )}
         {currentStep === 2 && (
           <div className="mt-12 relative z-10 max-w-4xl mx-auto px-4"><MeasurementForm onNext={next} onBack={back} /></div>

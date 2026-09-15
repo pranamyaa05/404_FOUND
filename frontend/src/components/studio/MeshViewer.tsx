@@ -1,8 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Environment } from "@react-three/drei";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
+import { OrbitControls, useGLTF } from "@react-three/drei";
+import * as THREE from "three";
 import { useStudioStore } from "@/store/studioStore";
 import { generateMesh } from "@/lib/api";
 import { fireBobMessage } from "@/hooks/useBobProactive";
@@ -12,96 +13,248 @@ interface Props {
   onBack: () => void;
 }
 
-/**
- * Renders the GLTF mesh returned from the backend Blender pipeline.
- *
- * Owner: Member 1 & 2 (3D mesh)
- * TODO: Replace the placeholder cube with the actual GLTF model once
- *       /generate-mesh endpoint is working.
- */
+// ── Scene setup: mirrors the image-to-3d-viewer branch viewer.js ──────────────
+function SceneSetup() {
+  const { gl, scene } = useThree();
+
+  useEffect(() => {
+    // ACES filmic tone mapping + dark background — same as branch
+    gl.toneMapping = THREE.ACESFilmicToneMapping;
+    gl.toneMappingExposure = 1.3;
+    gl.outputColorSpace = THREE.SRGBColorSpace;
+    gl.shadowMap.enabled = true;
+    gl.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    scene.background = new THREE.Color(0x070710);
+    scene.fog = new THREE.FogExp2(0x070710, 0.04);
+  }, [gl, scene]);
+
+  return null;
+}
+
+// ── Auto-centers and scales the loaded model to fit the camera ────────────────
 function Model({ url }: { url: string }) {
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} scale={1.5} />;
+  const { scene: modelScene } = useGLTF(url);
+  const { camera, controls } = useThree() as any;
+
+  useEffect(() => {
+    if (!modelScene) return;
+
+    // Enable shadows on all meshes
+    modelScene.traverse((n: any) => {
+      if (n.isMesh) {
+        n.castShadow = true;
+        n.receiveShadow = true;
+      }
+    });
+
+    // Auto-fit: scale to 2 units and center
+    const box = new THREE.Box3().setFromObject(modelScene);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const s = 2 / Math.max(size.x, size.y, size.z);
+    modelScene.scale.setScalar(s);
+    modelScene.position.sub(center.multiplyScalar(s));
+    modelScene.position.y += (size.y * s) / 2;
+
+    // Reset camera to a good viewing angle
+    if (camera) {
+      camera.position.set(2.5, 2, 3.5);
+    }
+    if (controls) {
+      controls.target.copy(modelScene.position);
+      controls.update();
+    }
+  }, [modelScene, camera, controls]);
+
+  return <primitive object={modelScene} />;
 }
 
-function PlaceholderModel() {
-  return (
-    <mesh>
-      <boxGeometry args={[1, 2, 0.5]} />
-      <meshStandardMaterial color="#9B6DFF" wireframe />
-    </mesh>
-  );
+// ── Grid helper — uses raw THREE.GridHelper like the branch viewer.js ─────────
+function GridHelper() {
+  const { scene } = useThree();
+  useEffect(() => {
+    const grid = new THREE.GridHelper(20, 40, 0x334466, 0x1e2a3a);
+    grid.name = "__grid__";
+    scene.add(grid);
+    return () => { scene.remove(grid); };
+  }, [scene]);
+  return null;
 }
 
+// ── Main Component ────────────────────────────────────────────────────────────
 export default function MeshViewer({ onNext, onBack }: Props) {
   const { measurements, selectedStyle, enhancedImage, setMeshUrl, meshUrl } =
     useStudioStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Guard against React StrictMode double-invoke
+  const fetchingRef = useRef(false);
+
   useEffect(() => {
-    if (!measurements || !selectedStyle) return;
+    if (!selectedStyle) return; // Skipped measurements is allowed
+    if (meshUrl || fetchingRef.current) return;
+
+    fetchingRef.current = true;
+    const controller = new AbortController();
 
     const fetchMesh = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const result = await generateMesh(measurements as unknown as Record<string, number>, selectedStyle, enhancedImage);
+        const result = await generateMesh(
+          measurements,
+          selectedStyle,
+          enhancedImage ?? ""
+        );
+        if (controller.signal.aborted) return;
         setMeshUrl(result.gltf_url);
-        // Tell BOB the mesh is ready — fires a fabric suggestion nudge
         const { skinTone, measurements: m } = useStudioStore.getState();
         const heightNote =
-          m && m.height < 155 ? " Since you're petite, lighter fabrics will drape better."
-          : m && m.height > 170 ? " Your height suits dramatic floor-length styles perfectly."
-          : "";
+          m && m.height < 155
+            ? " Since you're petite, lighter fabrics will drape better."
+            : m && m.height > 170
+            ? " Your height suits dramatic floor-length styles perfectly."
+            : "";
         fireBobMessage({
-          text: `Your 3D model is ready! ${heightNote}\n\nWant me to suggest the best fabric for this style based on your skin tone?`,
+          text: `Your 3D model is ready! ${heightNote}\n\nWant me to suggest the best fabric for this style?`,
           quickReplies: [
-            skinTone ? `Suggest fabrics for ${skinTone.displayName} skin` : "Suggest fabrics",
+            skinTone
+              ? `Suggest fabrics for ${skinTone.displayName} skin`
+              : "Suggest fabrics",
             "What colours work for me?",
             "How does this look for a wedding?",
           ],
         });
-      } catch (err) {
-        setError("Could not generate mesh. Showing placeholder preview.");
+      } catch (err: any) {
+        if (!controller.signal.aborted) {
+          setError(err.message || "Could not generate mesh.");
+        }
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
+        fetchingRef.current = false;
       }
     };
 
     fetchMesh();
-  }, [measurements, selectedStyle, enhancedImage, setMeshUrl]);
+    return () => {
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="card">
-      <h2 className="font-serif italic text-3xl text-surface-dark mb-2">3D Preview</h2>
-      <p className="text-surface-dark/60 mb-6">
-        Rotate and inspect your dress on a 3D body model.
+      <h2 className="font-serif italic text-3xl text-surface-dark mb-2">
+        3D Preview
+      </h2>
+      <p className="text-surface-dark/60 mb-4">
+        Rotate · zoom · inspect your garment from every angle.
       </p>
 
-      {isLoading && (
-        <div className="flex items-center justify-center h-64 text-surface-dark/60 animate-pulse font-serif italic">
-          Generating 3D mesh via Blender...
-        </div>
-      )}
-
-      {!isLoading && (
-        <div className="w-full h-[500px] rounded-xl overflow-hidden bg-surface-cream border border-dashed border-surface-dark/20 mb-6">
-          <Canvas camera={{ position: [0, 1, 4], fov: 50 }}>
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[5, 10, 5]} intensity={1} />
-            <Environment preset="city" />
-            <Suspense fallback={null}>
-              {meshUrl ? <Model url={meshUrl} /> : <PlaceholderModel />}
-            </Suspense>
-            <OrbitControls enablePan={false} minDistance={2} maxDistance={10} />
-          </Canvas>
-        </div>
-      )}
-
       {error && (
-        <p className="text-yellow-600 text-sm mb-4">{error}</p>
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-4 border border-red-200 text-sm overflow-auto break-all">
+          <strong>Generation Error:</strong> {error}
+        </div>
       )}
+
+      {/* Status bar — sits ABOVE the viewport, never blocks the grid */}
+      {isLoading && (
+        <div
+          className="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-3"
+          style={{ background: "#0f0f1a", border: "1px solid rgba(255,255,255,0.08)" }}
+        >
+          <div
+            className="w-4 h-4 rounded-full border-2 flex-shrink-0 animate-spin"
+            style={{ borderColor: "rgba(255,255,255,0.15)", borderTopColor: "#818cf8" }}
+          />
+          <span className="text-sm font-serif italic" style={{ color: "rgba(255,255,255,0.75)" }}>
+            ⏳ Generating via Trellis AI — this takes 1–3 min on first run…
+          </span>
+        </div>
+      )}
+
+      {/* Three.js Viewport — always rendered so grid is immediately interactive */}
+      <div
+        className="w-full rounded-xl overflow-hidden mb-6 relative"
+        style={{ height: 520, background: "#070710" }}
+      >
+        <Canvas
+          camera={{ position: [2, 1.5, 3], fov: 42 }}
+          shadows
+          style={{ width: "100%", height: "100%" }}
+        >
+          {/* Scene configuration — mirrors branch viewer.js */}
+          <SceneSetup />
+
+          {/* Lighting rig — same as branch */}
+          <ambientLight color={0xffffff} intensity={1.0} />
+          <directionalLight
+            color={0xfff0e0}
+            intensity={2.0}
+            position={[4, 8, 5]}
+            castShadow
+            shadow-mapSize={[2048, 2048]}
+          />
+          <directionalLight
+            color={0x6080ff}
+            intensity={1.2}
+            position={[-4, -1, -4]}
+          />
+          <directionalLight
+            color={0xffffff}
+            intensity={1.5}
+            position={[0, 3, -8]}
+          />
+          <hemisphereLight
+            color={0xffffff}
+            groundColor={0x444444}
+            intensity={0.6}
+          />
+
+          {/* Grid + ground */}
+          <GridHelper />
+          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow position={[0, -0.001, 0]}>
+            <planeGeometry args={[30, 30]} />
+            <shadowMaterial opacity={0.35} />
+          </mesh>
+
+          {/* Model loaded from Trellis */}
+          <Suspense fallback={null}>
+            {meshUrl && <Model url={meshUrl} />}
+          </Suspense>
+
+          <OrbitControls
+            enableDamping
+            dampingFactor={0.06}
+            minDistance={0.3}
+            maxDistance={80}
+            makeDefault
+          />
+        </Canvas>
+
+        {/* Empty state */}
+        {!isLoading && !meshUrl && !error && (
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ color: "rgba(255,255,255,0.25)" }}
+          >
+            <div className="text-center">
+              <div className="text-5xl mb-3">🧊</div>
+              <div className="italic text-sm">3D scene ready — awaiting model</div>
+            </div>
+          </div>
+        )}
+
+        {/* Controls hint */}
+        <div
+          className="absolute bottom-3 right-4 text-xs"
+          style={{ color: "rgba(255,255,255,0.3)", pointerEvents: "none" }}
+        >
+          Drag to rotate · Scroll to zoom
+        </div>
+      </div>
 
       <div className="flex gap-4">
         <button onClick={onBack} className="btn-outline flex-1">

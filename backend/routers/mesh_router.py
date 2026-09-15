@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class MeshRequest(BaseModel):
-    measurements: dict[str, float]
+    measurements: Optional[dict[str, float]] = None
     """
     Expected keys:
         height, chest, waist, hip, shoulder, sleeveLength
@@ -48,7 +48,7 @@ class MeshRequest(BaseModel):
 
 
 @router.post("/generate-mesh")
-async def generate_mesh(body: MeshRequest):
+def generate_mesh(body: MeshRequest):
     """
     Generate a 3D GLTF mesh and a 2D SVG die-line pattern
     using a headless Blender pipeline.

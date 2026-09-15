@@ -12,15 +12,13 @@ const BASE = "/api"; // proxied to BACKEND_URL via next.config.js
 // 
 // Image Enhancement  (Owner: Member 5)
 // 
-export async function enhanceImage(
-  file: File
-): Promise<{ enhanced_image_url: string }> {
-  const form = new FormData();
-  form.append("file", file);
+export async function enhanceImage(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
 
-  const res = await fetch(`${BASE}/enhance-image`, {
+  const res = await fetch("/api/enhance-image", {
     method: "POST",
-    body: form,
+    body: formData,
   });
 
   if (!res.ok) throw new Error(`enhance-image failed: ${res.status}`);
@@ -31,18 +29,39 @@ export async function enhanceImage(
 // Mesh + Die-line Generation  (Owner: Member 1 & 2)
 // 
 export async function generateMesh(
-  measurements: Record<string, number>,
+  measurements: any,
   style: string,
-  enhancedImageUrl: string | null
-): Promise<{ gltf_url: string; die_line_url: string }> {
-  const res = await fetch(`${BASE}/generate-mesh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ measurements, style, enhanced_image_url: enhancedImageUrl }),
-  });
+  enhancedImageUrl: string
+) {
+  // Call FastAPI DIRECTLY — bypasses the Next.js proxy which has a ~30s timeout.
+  // FastAPI has CORS enabled for localhost:3000 so this is safe.
+  // Trellis generation takes 2-5 min, so we set a 10-minute client-side timeout.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000); // 10 min
 
-  if (!res.ok) throw new Error(`generate-mesh failed: ${res.status}`);
-  return res.json();
+  try {
+    const res = await fetch("http://localhost:8000/generate-mesh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ measurements, style, enhanced_image_url: enhancedImageUrl }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      let errorDetail = text;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.detail) errorDetail = parsed.detail;
+      } catch (e) {
+        // not JSON, keep raw text
+      }
+      throw new Error(errorDetail || `generate-mesh failed: ${res.status}`);
+    }
+    return res.json();
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 // 

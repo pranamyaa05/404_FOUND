@@ -30,13 +30,15 @@ export interface MeasurementValues {
  * and add the corresponding input below.
  */
 export default function MeasurementForm({ onNext, onBack }: Props) {
-  const { setMeasurements } = useStudioStore();
+  const { measurements, setMeasurements } = useStudioStore();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<MeasurementValues>();
+  } = useForm<MeasurementValues>({
+    defaultValues: measurements || undefined,
+  });
 
   const onSubmit = (data: MeasurementValues) => {
     setMeasurements(data);
@@ -108,6 +110,17 @@ export default function MeasurementForm({ onNext, onBack }: Props) {
           </button>
           <button type="submit" className="btn-primary flex-1">
             Generate 3D Preview →
+          </button>
+        </div>
+
+        {/* Skip option — lets users jump straight to 3D without measurements */}
+        <div className="text-center mt-3">
+          <button
+            type="button"
+            onClick={onNext}
+            className="text-sm text-surface-dark/50 hover:text-surface-dark/80 underline underline-offset-2 transition-colors"
+          >
+            Skip measurements → go straight to 3D Preview
           </button>
         </div>
       </form>

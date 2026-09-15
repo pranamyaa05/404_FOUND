@@ -63,6 +63,40 @@ from knowledge.fashion_knowledge import (
 
 
 # ─────────────────────────────────────────────────────────────────────
+# Emoji stripper — enforces plain-text-only responses
+# ─────────────────────────────────────────────────────────────────────
+
+_EMOJI_PATTERN = re.compile(
+    "["
+    "\U0001F600-\U0001F64F"  # emoticons
+    "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    "\U0001F680-\U0001F6FF"  # transport & map symbols
+    "\U0001F1E0-\U0001F1FF"  # flags
+    "\U00002702-\U000027B0"  # dingbats
+    "\U000024C2-\U0001F251"  # enclosed characters
+    "\U0001F900-\U0001F9FF"  # supplemental symbols
+    "\U0001FA00-\U0001FA6F"  # chess symbols
+    "\U0001FA70-\U0001FAFF"  # symbols extended-A
+    "\U00002600-\U000026FF"  # misc symbols
+    "\U0000FE00-\U0000FE0F"  # variation selectors
+    "\U0000200D"             # zero width joiner
+    "\U00002B50-\U00002B55"  # stars
+    "\U000023E9-\U000023F3"  # misc
+    "\U0000203C-\U00003299"  # misc symbols
+    "]+",
+    flags=re.UNICODE,
+)
+
+
+def _strip_emojis(text: str) -> str:
+    """Remove all emoji characters from text, clean up leftover whitespace."""
+    cleaned = _EMOJI_PATTERN.sub("", text)
+    # Clean up double spaces left behind by removed emojis
+    cleaned = re.sub(r"  +", " ", cleaned)
+    return cleaned.strip()
+
+
+# ─────────────────────────────────────────────────────────────────────
 # User context dataclass (mirrors frontend BobUserContext)
 # ─────────────────────────────────────────────────────────────────────
 
@@ -170,7 +204,7 @@ def _chat_via_gemini(
                     system_instruction=system_instruction,
                     generation_config=genai.GenerationConfig(
                         temperature=0.7,
-                        max_output_tokens=350,
+                        max_output_tokens=800,
                     ),
                 )
                 chat_session = candidate.start_chat(history=[])
@@ -216,6 +250,8 @@ def _chat_via_gemini(
 
     # Clean up any prompt artifacts
     reply = re.sub(r"^BOB:\s*", "", reply).strip()
+    # Strip any emoji characters — BOB should respond in plain text only
+    reply = _strip_emojis(reply)
     if not reply:
         reply = "I'm thinking... give me a sec! Try rephrasing your question."
 
@@ -460,7 +496,7 @@ def _chat_rule_based(message: str, ctx: UserContext, session_id: str | None) -> 
             reply = (
                 f"**How to measure {key.replace('_', ' ')}:**\n"
                 f"{data['how_to']}\n\n"
-                f"💡 Tip: {data['tip']}"
+                f"Tip: {data['tip']}"
             )
             return {"reply": reply, "session_id": session_id or "rule", "recommendations": None}
 
@@ -468,10 +504,10 @@ def _chat_rule_based(message: str, ctx: UserContext, session_id: str | None) -> 
     for fabric, data in FABRICS.items():
         if fabric.lower() in msg:
             reply = (
-                f"**{fabric}** — {data['properties']}\n\n"
-                f"✅ Best for: {', '.join(data['best_for'][:3])}\n"
-                f"❌ Avoid for: {', '.join(data['avoid_for'][:2])}\n"
-                f"🧺 Care: {data['care']}"
+                f"**{fabric}** -- {data['properties']}\n\n"
+                f"Best for: {', '.join(data['best_for'][:3])}\n"
+                f"Avoid for: {', '.join(data['avoid_for'][:2])}\n"
+                f"Care: {data['care']}"
             )
             return {"reply": reply, "session_id": session_id or "rule", "recommendations": None}
 
@@ -516,17 +552,17 @@ def _chat_rule_based(message: str, ctx: UserContext, session_id: str | None) -> 
         if tone:
             reply = (
                 f"For your **{tone['display']}** skin tone, I'd go with:\n\n"
-                f"✨ **Best colours:** {', '.join(tone['best_colors'][:3])}\n"
-                f"⚡ **Avoid:** {', '.join(tone['avoid_colors'][:2])}\n"
-                f"🧵 **Fabric tip:** {tone['fabric_notes']}"
+                f"**Best colours:** {', '.join(tone['best_colors'][:3])}\n"
+                f"**Avoid:** {', '.join(tone['avoid_colors'][:2])}\n"
+                f"**Fabric tip:** {tone['fabric_notes']}"
             )
             return {"reply": reply, "session_id": session_id or "rule", "recommendations": None}
 
     # Generic fallback
     fallback_replies = [
-        "That's a great question! I'm best at Indian fashion — styles, fabrics, measurements, and tailoring. Ask me anything in those areas.",
-        "I'm BOB, your fashion expert 🎨 I know Indian ethnic wear inside out. Try asking me about a specific style, fabric, or measurement.",
-        "I didn't quite get that. Try asking something like 'What fabric suits a kurta?' or 'How do I measure my chest?'",
+        "That's a great question! I specialise in Indian fashion -- styles, fabrics, measurements, and tailoring. Ask me anything in those areas.",
+        "I'm BOB, your fashion consultant. I know Indian ethnic wear inside out. Try asking me about a specific style like Ghagra, a fabric like Silk, or how to take measurements.",
+        "I didn't quite get that. Try asking something like 'What fabric suits a kurta?' or 'How do I measure my chest?' or 'Explain Anarkali'.",
     ]
     import hashlib
     idx = int(hashlib.md5(message.encode()).hexdigest(), 16) % len(fallback_replies)

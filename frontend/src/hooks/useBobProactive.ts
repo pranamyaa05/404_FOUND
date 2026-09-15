@@ -45,15 +45,15 @@ function getStepMessage(
   switch (step) {
     case 0:
       return {
-        text: "Welcome to the Studio!  Let's start by picking a dress style.\nNot sure which one? I've got opinions ",
+        text: "Welcome to the Studio! Let's start by picking a dress style.\nNot sure which one? I can help you decide.",
         quickReplies: ["What style suits me?", "Explain each style", "What's a Ghagra?"],
       };
 
     case 1:
       return {
         text: style
-          ? `Nice choice — **${style}**! \n\nNow upload a reference photo of the design you have in mind. Clear photos on plain backgrounds work best — I'll clean it up either way.`
-          : "Now upload a reference photo of your dress design. The clearer the better — I'll handle the rest.",
+          ? `Nice choice -- **${style}**!\n\nNow upload a reference photo of the design you have in mind. Clear photos on plain backgrounds work best -- I'll clean it up either way.`
+          : "Now upload a reference photo of your dress design. The clearer the better -- I'll handle the rest.",
         quickReplies: ["What makes a good photo?", "Can I use a sketch?"],
       };
 
@@ -63,8 +63,8 @@ function getStepMessage(
       if (style) contextParts.push(`you're going for a **${style}**`);
 
       const intro = contextParts.length > 0
-        ? `${contextParts.join(", ")} — I'll keep all of that in mind for fabric and colour suggestions! `
-        : "Time to enter your measurements — all in centimetres.";
+        ? `${contextParts.join(", ")} -- I'll keep all of that in mind for fabric and colour suggestions.`
+        : "Time to enter your measurements -- all in centimetres.";
 
       return {
         text: `${intro}\n\nNeed help taking a measurement? Just ask.`,
@@ -75,19 +75,19 @@ function getStepMessage(
     case 3: {
       let heightNote = "";
       if (height && height < 155) {
-        heightNote = "\n\nSince you're on the petite side, I'd avoid very heavy fabrics — they can overwhelm the silhouette. Ask me for alternatives!";
+        heightNote = "\n\nSince you're on the petite side, I'd avoid very heavy fabrics -- they can overwhelm the silhouette. Ask me for alternatives!";
       } else if (height && height > 170) {
-        heightNote = "\n\nYour height is perfect for dramatic floor-length styles — Anarkali and full Ghagra will look stunning on you.";
+        heightNote = "\n\nYour height is perfect for dramatic floor-length styles -- Anarkali and full Ghagra will look stunning on you.";
       }
       return {
-        text: `Here's your 3D preview!  Rotate it, zoom in, check the fit from all angles.${heightNote}`,
+        text: `Here's your 3D preview! Rotate it, zoom in, check the fit from all angles.${heightNote}`,
         quickReplies: ["Suggest a fabric for this style", "How does this look for a wedding?", "Explain the silhouette"],
       };
     }
 
     case 4:
       return {
-        text: "Your tailor-ready pattern is ready! \n\nEach panel includes a **1.5 cm seam allowance**. Print at **1:1 scale** and cut directly on the lines — no extra margin needed.",
+        text: "Your tailor-ready pattern is ready!\n\nEach panel includes a **1.5 cm seam allowance**. Print at **1:1 scale** and cut directly on the lines -- no extra margin needed.",
         quickReplies: ["Explain the panels", "What is seam allowance?", "How do I hand this to a tailor?"],
       };
 
@@ -100,23 +100,23 @@ function getStepMessage(
 
 const IDLE_MESSAGES: Record<number, ProactivePayload> = {
   0: {
-    text: "Still deciding on a style? I can help! Tell me the occasion and I'll narrow it down for you. ",
+    text: "Still deciding on a style? I can help! Tell me the occasion and I'll narrow it down for you.",
     quickReplies: ["Help me choose", "What's best for a wedding?", "What's most popular?"],
   },
   1: {
-    text: "Having trouble with the photo? Even a photo of a dress on a hanger works well. I'll isolate the design. ",
+    text: "Having trouble with the photo? Even a photo of a dress on a hanger works well. I'll isolate the design.",
     quickReplies: ["What file formats work?", "Can I use a screenshot?"],
   },
   2: {
-    text: "Measurements can be tricky — want me to walk you through each one step by step? ",
+    text: "Measurements can be tricky -- want me to walk you through each one step by step?",
     quickReplies: ["Yes, walk me through it", "Which measurement matters most?"],
   },
   3: {
-    text: "The 3D preview might take a moment if the backend is still processing. In the meantime — want fabric suggestions for this style? ",
+    text: "The 3D preview might take a moment if the backend is still processing. In the meantime -- want fabric suggestions for this style?",
     quickReplies: ["Suggest fabrics", "What colours suit me?"],
   },
   4: {
-    text: "Ready to take the pattern to your tailor? I can explain what each panel means if that helps! ",
+    text: "Ready to take the pattern to your tailor? I can explain what each panel means if that helps.",
     quickReplies: ["Explain the panels", "What should I tell my tailor?"],
   },
 };

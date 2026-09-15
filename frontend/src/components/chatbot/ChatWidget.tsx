@@ -69,7 +69,7 @@ const WELCOME_MESSAGE: QuickReplyMessage = {
   id: "welcome",
   role: "bob",
   type: "quick_replies",
-  text: "Welcome to my atelier. I'm BOB — your Master Tailor, powered by Gemini.\nI know Indian ethnic wear inside out — silhouettes, fabrics, draping, the works.\n\nHow may I assist you today?",
+  text: "Welcome to StitchSmart. I'm BOB -- your personal fashion consultant.\nI specialise in Indian ethnic wear -- styles, fabrics, colours, measurements, and tailoring.\n\nHow can I help you today?",
   replies: INITIAL_QUICK_REPLIES,
   timestamp: new Date(),
 };
@@ -293,7 +293,7 @@ export default function ChatWidget() {
                 </span>
               </div>
               <p className="text-surface-dark/50 text-[10px] truncate">
-                Powered by Google Gemini · Bespoke Atelier
+                Your personal fashion consultant
               </p>
             </div>
             {/* Minimise / maximise */}

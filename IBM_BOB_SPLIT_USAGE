@@ -1,0 +1,91 @@
+# How We Used IBM Bob — StitchSmart / Team 404 Found
+
+> IBM Bob was used throughout the StitchSmart project as a core development and design partner — from early architecture decisions through implementation, debugging, and final integration.
+
+---
+
+## Computer Vision & Image Enhancement
+
+Used IBM Bob to design and refine the image-processing workflow for background removal, garment isolation, and privacy-preserving removal of identifiable features.
+
+**What Bob helped with:**
+
+- Designing the `rembg` + OpenCV + MediaPipe pipeline sequence
+- Deciding when to apply background removal vs. garment-boundary isolation
+- Identifying edge cases such as low-contrast garments, patterned backgrounds, and partial images
+- Ensuring identifiable features such as faces and exposed skin are removed before the image is used as a texture
+
+---
+
+## AI Recommendation Architecture
+
+Used IBM Bob for critical analysis and refinement of the recommendation engine, including skin-tone-aware color suggestions, fabric selection, and style recommendations.
+
+**What Bob helped with:**
+
+- Structuring the Gemini JSON-mode prompt to return typed `recommendations[]` arrays
+- Designing the six-point skin tone model (`very_fair` → `deep`) and its mapping to fabric and colour palettes
+- Defining the fallback chain: Gemini → IBM Watson Assistant → watsonx.ai → HuggingFace → rule-based
+- Reviewing the recommendation card schema (`style`, `fabric`, `colors[]`, `reason`, `confidence`)
+
+---
+
+## System & UI/UX Design
+
+Used IBM Bob to design and iterate the overall StitchSmart user journey, from image upload and measurements to recommendations, 3D visualization, and pattern generation.
+
+**What Bob helped with:**
+
+- Laying out the 5-step Studio flow: **Style Picker → Image Upload → Measurements → 3D Viewer → Die-Line**
+- Designing the `studioStore` Zustand state structure so user context could flow between modules without repeatedly requesting the same information
+- Iterating on the `/suggest` page flow: **Skin Tone → Occasion → Recommendation Cards**
+- Reviewing the landing-page information hierarchy and call-to-action structure
+
+---
+
+## 3D & 2D Garment Generation Pipeline
+
+IBM Bob played a significant role in designing and integrating our **3D-to-2D garment generation workflow**, while **Trellis AI and Blender** served as the core technologies for generating and processing the garment representations.
+
+**What Bob helped with:**
+
+- Designing the three-tier generation strategy: **Trellis AI → Blender headless pipeline → pure-Python procedural fallback**
+- Integrating the Trellis-based 3D generation workflow with our FastAPI backend
+- Designing the Blender pipeline for 3D mesh processing, garment visualization, and 2D pattern generation
+- Reasoning through the `gradio_client` timeout problem and implementing a 15-second fallback strategy
+- Designing the Blender environment-variable interface (`MORPHO_UPLOADS`, `MORPHO_OUTPUTS`)
+- Identifying GLTF 2.0 binary structure requirements for the procedural `.glb` generator
+- Designing the SVG die-line panel layout containing **front, back, sleeve, neckline facing, tailor notes, and a scale-check square**
+- Ensuring the **Trellis → Blender → 2D SVG** workflow was integrated into the overall StitchSmart pipeline rather than functioning as isolated components
+
+### Role of the Technologies
+
+| Technology | Role in StitchSmart |
+|---|---|
+| **IBM Bob** | Architecture, development assistance, debugging, workflow design, and integration |
+| **Trellis AI** | Initial 3D garment generation from the reference image |
+| **Blender** | 3D mesh processing, garment visualization, and downstream 2D pattern/die-line generation |
+| **Python Procedural Pipeline** | Lightweight fallback for generating GLTF and 2D outputs when the primary pipeline is unavailable |
+
+Together, these components connect:
+
+**Reference Image → 3D Garment → Blender Processing → 2D Pattern / Die-Line**
+
+---
+
+## Code Development, Debugging & Integration
+
+Used IBM Bob as a development assistant to generate and refactor code, identify implementation issues, debug errors, and integrate the computer-vision, AI, Blender, backend, and frontend components.
+
+**What Bob helped with:**
+
+- Generating and refactoring service files (`mesh_service.py`, `ai_service.py`, `image_service.py`)
+- Debugging the Next.js proxy 30-second timeout issue and designing the direct-fetch workaround in `api.ts`
+- Fixing Windows `cp1252` encoding errors in `blender_pipeline.py` through UTF-8 stdout/stderr reconfiguration
+- Integrating the Zustand `getBobContext()` selector so the chatbot always has fresh user state
+- Resolving CORS configuration between the Next.js development server and the FastAPI backend
+- Writing and validating the `generate_procedural_garment_glb()` GLTF binary packer using Python `struct`
+
+---
+
+> **IBM Bob was used across every layer of StitchSmart — not as a single-use coding tool, but as an active development and design collaborator spanning architecture, AI workflows, 3D/2D generation, debugging, and integration.**

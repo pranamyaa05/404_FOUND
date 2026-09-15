@@ -43,6 +43,7 @@ build/
 # ──────────────────────────────
 backend/uploads/
 backend/temp/
+backend/*_error_log.txt
 *.gltf.tmp
 *.obj.tmp
 

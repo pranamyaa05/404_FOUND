@@ -9,6 +9,7 @@ a 2D SVG die-line pattern using blender_pipeline.py.
 import subprocess
 import uuid
 import os
+import glob
 import json
 import logging
 import traceback
@@ -83,18 +84,20 @@ def generate(measurements: dict | None, style: str, image_url: str | None = None
                 sys.stdout.reconfigure(encoding='utf-8')
             if hasattr(sys.stderr, 'reconfigure'):
                 sys.stderr.reconfigure(encoding='utf-8')
-                
+
+            # gradio_client 2.7+ uses token=, not hf_token=
             client = Client(
                 "trellis-community/TRELLIS",
-                hf_token=hf_token if hf_token else None
+                token=hf_token if hf_token else None
             )
             break
         except Exception as e:
             logger.warning(f"[mesh] Client init attempt {attempt+1}/5 failed: {e}")
             if attempt == 4:
                 raise
-            logger.info(f"[mesh] Waiting 15s for HF Space to warm up...")
-            time.sleep(15)
+            wait = 15 * (attempt + 1)
+            logger.info(f"[mesh] HF Space warming up... retrying in {wait}s")
+            time.sleep(wait)
 
     try:
         logger.info("[mesh] Trellis: Initializing session...")
@@ -103,12 +106,18 @@ def generate(measurements: dict | None, style: str, image_url: str | None = None
         logger.info("[mesh] Trellis: Preprocessing image...")
         preprocessed = client.predict(handle_file(local_image), api_name="/preprocess_image")
         
-        if isinstance(preprocessed, dict):
-            preprocessed = preprocessed.get('path') or preprocessed.get('url') or local_image
+        # In gradio_client 2.7.0, preprocess_image returns a plain local file path string
+        if isinstance(preprocessed, str):
+            preprocessed_path = preprocessed
+        elif isinstance(preprocessed, dict):
+            preprocessed_path = preprocessed.get('path') or preprocessed.get('url') or local_image
         elif isinstance(preprocessed, (list, tuple)):
-            preprocessed = preprocessed[0]
-            if isinstance(preprocessed, dict):
-                preprocessed = preprocessed.get('path') or preprocessed.get('url')
+            item = preprocessed[0]
+            preprocessed_path = item.get('path') if isinstance(item, dict) else (item if isinstance(item, str) else local_image)
+        else:
+            preprocessed_path = local_image
+
+        logger.info(f"[mesh] Trellis: Preprocessed path = {preprocessed_path}")
 
         logger.info("[mesh] Trellis: Initializing tab and seed...")
         client.predict(api_name="/lambda")
@@ -116,16 +125,22 @@ def generate(measurements: dict | None, style: str, image_url: str | None = None
         resolved_seed = int(seed_result) if seed_result is not None else 0
 
         logger.info("[mesh] Trellis: Submitting GLB generation task...")
-        main_img = {"url": to_data_uri(preprocessed), "meta": {"_type": "gradio.FileData"}}
+        main_img = {"url": to_data_uri(preprocessed_path), "meta": {"_type": "gradio.FileData"}}
         
         job = client.submit(
             main_img, [], resolved_seed, 7.5, 12, 3.0, 12, "stochastic", 0.95, 1024,
             api_name="/generate_and_extract_glb"
         )
         
+        logger.info("[mesh] Trellis: Waiting for job to complete...")
+        iteration = 0
         while not job.done():
             time.sleep(2)
+            iteration += 1
+            if iteration % 5 == 0:
+                logger.info(f"[mesh] Trellis: Job still running (iteration {iteration})...")
             
+        logger.info("[mesh] Trellis: Fetching job result...")
         result = job.result()
         logger.info("[mesh] Trellis: Generation complete.")
 
@@ -193,11 +208,23 @@ def generate(measurements: dict | None, style: str, image_url: str | None = None
         cmd = [blender_exe, "--background", "--python", SCRIPT_PATH]
         logger.info("[mesh] Executing: %s", " ".join(cmd))
         try:
-            b_result = subprocess.run(cmd, env=env, cwd=morpho_dir, capture_output=True, text=True, timeout=180)
-            if b_result.returncode != 0:
-                logger.error("[mesh] Blender failed, but proceeding with raw Trellis GLB:\n%s", b_result.stderr[-2000:])
+            b_result = subprocess.run(cmd, env=env, cwd=morpho_dir, capture_output=True, text=True, timeout=300)
+            # NOTE: The Export Paper Model addon emits a harmless BMesh __del__ exception
+            # that causes Blender to exit with code 1 even on a successful run.
+            # We therefore check for output files rather than the return code.
+            preview_exists = os.path.exists(os.path.join(outputs_dir, "preview.glb"))
+            svg_exists = bool(glob.glob(os.path.join(outputs_dir, "*.svg")))
+            if not preview_exists and not svg_exists:
+                logger.error("[mesh] Blender produced no output files (exit %d).\nSTDOUT: %s\nSTDERR: %s",
+                             b_result.returncode, b_result.stdout[-2000:], b_result.stderr[-2000:])
+                with open(os.path.join(_BACKEND_DIR, "blender_error_log.txt"), "w") as f:
+                    f.write(f"--- STDOUT ---\n{b_result.stdout}\n\n--- STDERR ---\n{b_result.stderr}")
+            else:
+                logger.info("[mesh] Blender finished (exit %d). Outputs present — proceeding.", b_result.returncode)
+        except subprocess.TimeoutExpired:
+            logger.error("[mesh] Blender timed out after 300s")
         except Exception as e:
-            logger.error("[mesh] Blender execution error (proceeding with raw Trellis GLB):\n%s", traceback.format_exc())
+            logger.error("[mesh] Blender execution error:\n%s", traceback.format_exc())
     else:
         logger.warning("[mesh] Blender not found, skipping die-line generation. Using raw Trellis model.")
 
@@ -236,9 +263,10 @@ def generate(measurements: dict | None, style: str, image_url: str | None = None
                 
                 if svg_tag_match:
                     svg_tag = svg_tag_match.group(0)
-                    w_match = re.search(r'\bwidth="([0-9\.]+)([^"]*)"', svg_tag)
-                    h_match = re.search(r'\bheight="([0-9\.]+)([^"]*)"', svg_tag)
-                    vb_match = re.search(r'viewBox="([^"]+)"', svg_tag)
+                    w_match = re.search(r'\bwidth=[\'"]([0-9\.]+)([^*\'"]*)[\'"]', svg_tag)
+                    h_match = re.search(r'\bheight=[\'"]([0-9\.]+)([^*\'"]*)[\'"]', svg_tag)
+                    vb_match = re.search(r'viewBox=[\'"]([^\'"]+)[\'"]', svg_tag)
+
                     
                     try:
                         vb_w, vb_h = 1000.0, 1000.0

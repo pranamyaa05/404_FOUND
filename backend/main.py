@@ -57,11 +57,8 @@ app = FastAPI(
 # Allow the Next.js dev server to call the backend directly.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Next.js dev
-        settings.FRONTEND_URL,   # production URL (set in .env)
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

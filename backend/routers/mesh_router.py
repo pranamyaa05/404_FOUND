@@ -57,7 +57,7 @@ def generate_mesh(body: MeshRequest):
         "[mesh-router] /generate-mesh request: style=%s image_url=%s measurements_keys=%s",
         body.style,
         body.enhanced_image_url,
-        list(body.measurements.keys()),
+        list(body.measurements.keys()) if body.measurements else [],
     )
     try:
         result = mesh_service.generate(

@@ -1,0 +1,93 @@
+Client.predict() Usage Info
+---------------------------
+Named API endpoints: 12
+
+ - predict(api_name="/start_session") -> 
+    Parameters:
+     - None
+    Returns:
+     - None
+
+ - predict(api_name="/lambda") -> 
+    Parameters:
+     - None
+    Returns:
+     - None
+
+ - predict(api_name="/lambda_1") -> 
+    Parameters:
+     - None
+    Returns:
+     - None
+
+ - predict(image, api_name="/preprocess_image") -> image_prompt
+    Parameters:
+     - [Image] image: dict(path: str | None (Path to a local file), url: str | None (Publicly available url or base64 encoded image), size: int | None (Size of image in bytes), orig_name: str | None (Original filename), mime_type: str | None (mime type of image), is_stream: bool (Can always be set to False), meta: dict(str, Any)) (required)  (For input, either path or url must be provided. For output, path is always provided.) 
+    Returns:
+     - [Image] image_prompt: dict(path: str | None (Path to a local file), url: str | None (Publicly available url or base64 encoded image), size: int | None (Size of image in bytes), orig_name: str | None (Original filename), mime_type: str | None (mime type of image), is_stream: bool (Can always be set to False), meta: dict(str, Any)) 
+
+ - predict(images, api_name="/preprocess_images") -> image_prompt
+    Parameters:
+     - [Gallery] images: list[dict(image: dict(path: str | None (Path to a local file), url: str | None (Publicly available url or base64 encoded image), size: int | None (Size of image in bytes), orig_name: str | None (Original filename), mime_type: str | None (mime type of image), is_stream: bool (Can always be set to False), meta: dict(str, Any)), caption: str | None) | dict(video: filepath, caption: str | None)] (not required, defaults to:   [])  
+    Returns:
+     - [Gallery] image_prompt: list[dict(image: dict(path: str | None (Path to a local file), url: str | None (Publicly available url or base64 encoded image), size: int | None (Size of image in bytes), orig_name: str | None (Original filename), mime_type: str | None (mime type of image), is_stream: bool (Can always be set to False), meta: dict(str, Any)), caption: str | None) | dict(video: filepath, caption: str | None)] 
+
+ - predict(randomize_seed, seed, api_name="/get_seed") -> seed
+    Parameters:
+     - [Checkbox] randomize_seed: bool (not required, defaults to:   True)  
+     - [Slider] seed: float (not required, defaults to:   0)  
+    Returns:
+     - [Slider] seed: float (numeric value between 0 and 2147483647) 
+
+ - predict(image, multiimages, seed, ss_guidance_strength, ss_sampling_steps, slat_guidance_strength, slat_sampling_steps, multiimage_algo, mesh_simplify, texture_size, api_name="/generate_and_extract_glb") -> (generated_3d_asset, extracted_glbgaussian, download_glb)
+    Parameters:
+     - [Image] image: dict(path: str | None (Path to a local file), url: str | None (Publicly available url or base64 encoded image), size: int | None (Size of image in bytes), orig_name: str | None (Original filename), mime_type: str | None (mime type of image), is_stream: bool (Can always be set to False), meta: dict(str, Any)) (required)  (For input, either path or url must be provided. For output, path is always provided.) 
+     - [Gallery] multiimages: list[dict(image: dict(path: str | None (Path to a local file), url: str | None (Publicly available url or base64 encoded image), size: int | None (Size of image in bytes), orig_name: str | None (Original filename), mime_type: str | None (mime type of image), is_stream: bool (Can always be set to False), meta: dict(str, Any)), caption: str | None) | dict(video: filepath, caption: str | None)] (not required, defaults to:   [])  
+     - [Slider] seed: float (not required, defaults to:   0)  
+     - [Slider] ss_guidance_strength: float (not required, defaults to:   7.5)  
+     - [Slider] ss_sampling_steps: float (not required, defaults to:   12)  
+     - [Slider] slat_guidance_strength: float (not required, defaults to:   3.0)  
+     - [Slider] slat_sampling_steps: float (not required, defaults to:   12)  
+     - [Radio] multiimage_algo: Literal['stochastic', 'multidiffusion'] (not required, defaults to:   stochastic)  
+     - [Slider] mesh_simplify: float (not required, defaults to:   0.95)  
+     - [Slider] texture_size: float (not required, defaults to:   1024)  
+    Returns:
+     - [Video] generated_3d_asset: dict(video: filepath, subtitles: filepath | None) 
+     - [Litmodel3d] extracted_glbgaussian: filepath 
+     - [Downloadbutton] download_glb: filepath 
+
+ - predict(api_name="/lambda_2") -> download_glb
+    Parameters:
+     - None
+    Returns:
+     - [Downloadbutton] download_glb: filepath 
+
+ - predict(api_name="/lambda_3") -> (download_glb, download_gaussian)
+    Parameters:
+     - None
+    Returns:
+     - [Downloadbutton] download_glb: filepath 
+     - [Downloadbutton] download_gaussian: filepath 
+
+ - predict(api_name="/extract_gaussian") -> (extracted_glbgaussian, download_gaussian)
+    Parameters:
+     - None
+    Returns:
+     - [Litmodel3d] extracted_glbgaussian: filepath 
+     - [Downloadbutton] download_gaussian: filepath 
+
+ - predict(api_name="/lambda_4") -> download_gaussian
+    Parameters:
+     - None
+    Returns:
+     - [Downloadbutton] download_gaussian: filepath 
+
+ - predict(api_name="/lambda_5") -> (download_glb, download_gaussian)
+    Parameters:
+     - None
+    Returns:
+     - [Downloadbutton] download_glb: filepath 
+     - [Downloadbutton] download_gaussian: filepath 
+
+Unnamed API endpoints: 0
+

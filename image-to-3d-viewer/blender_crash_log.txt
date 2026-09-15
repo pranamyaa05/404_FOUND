@@ -1,0 +1,109 @@
+--- STDOUT ---
+[INIT] Script path: D:\RVCE\Sem 3\IBM SkillsBuild\3D\image-to-3d-viewer\backend\blender_pipeline.py
+[INIT] Script directory: D:\RVCE\Sem 3\IBM SkillsBuild\3D\image-to-3d-viewer\backend
+[INIT] Uploads directory: C:\Users\Dell\AppData\Local\Temp\blender_dieline_qazuhvw8\uploads
+[INIT] Outputs directory: C:\Users\Dell\AppData\Local\Temp\blender_dieline_qazuhvw8\outputs
+Morpho Engine compiling file: C:\Users\Dell\AppData\Local\Temp\blender_dieline_qazuhvw8\uploads\input.glb
+16:53:32 | INFO: Data are loaded, start creating Blender stuff
+16:53:32 | INFO: Blender create Mesh node geometry_0
+16:53:32 | INFO: glTF import finished in 0.05s
+Analyzing mesh complexity... Total faces: 25612
+Warning: Mesh is too complex (25612 faces). Initiating optimization...
+Optimization complete. Mesh reduced to 1500 faces.
+Info: Removed: 199 vertices, 241 edges, 0 faces
+Info: Removed: 0 vertices, 0 edges, 0 faces
+
+[METRICS] Extracting mesh geometry metrics...
+[METRICS] [OK] Mesh metrics calculated:
+[METRICS]   Bounding Box: 0.850m x 0.339m x 0.984m
+[METRICS]   Volume (bbox): 0.283947 m^3
+[METRICS]   Volume (mesh): 0.011886 m^3
+[METRICS]   Surface Area: 2.806050 m^2
+[METRICS]   Packaging Efficiency: 4.19%
+[METRICS]   Saved to: C:\Users\Dell\AppData\Local\Temp\blender_dieline_qazuhvw8\outputs\mesh_metrics.json
+
+
+[EXPORT] Exporting 3D preview to GLB format...
+INFO Draco mesh compression is available, use library at D:\Blender Foundation\Blender 4.5\4.5\scripts\addons_core\io_scene_gltf2\extern_draco.dll
+16:53:33 | INFO: Starting glTF 2.0 export
+16:53:33 | INFO: Extracting primitive: geometry_0
+16:53:33 | INFO: Primitives created: 1
+16:53:33 | INFO: Finished glTF 2.0 export in 0.26299595832824707 s
+Blender 4.5.0 (hash 8cb6b388974a built 2025-07-15 01:36:24)
+
+[EXPORT] [OK] GLB export successful: preview.glb (1521.08 KB)
+
+[EXPORT] Preparing mesh for 2D dieline unfold...
+[EXPORT] Attempting direct module unfold (Method 1: Direct API)...
+[EXPORT]   Initializing unfolder for 1500 faces...
+[EXPORT]   Computing optimal layout (page size: A3)...
+[EXPORT]   Writing SVG to disk...
+[EXPORT] [FAIL] Direct module method failed: UnfoldError("""An island is too big to fit onto page of the given size. Either downscale the model or find and split that island manually.
+Export failed, sorry.""")
+[EXPORT] Attempting standard operator fallback (Method 2: Operator API)...
+Error: Object "world" is not a mesh
+Invalid Input Error: Error: Object "world" is not a mesh
+
+
+
+--- STDERR ---
+PIPELINE FATAL ERROR: All SVG export methods failed.
+  - Direct module error: UnfoldError("""An island is too big to fit onto page of the given size. Either downscale the model or find and split that island manually.
+Export failed, sorry.""")
+  - Operator error: Invalid Input Error: Error: Object "world" is not a mesh
+
+
+Possible causes:
+  1. io_mesh_paper_model addon not properly installed/enabled
+  2. Mesh still too complex despite optimization (1500 faces)
+  3. Non-manifold geometry or self-intersections in mesh
+  4. Addon incompatible with Blender version (requires 4.2+)
+Traceback (most recent call last):
+  File "D:\RVCE\Sem 3\IBM SkillsBuild\3D\image-to-3d-viewer\backend\blender_pipeline.py", line 295, in run_morpho_dynamic_pipeline
+    unfolder.save(props, exporter)
+  File "C:\Users\Dell\AppData\Roaming\Blender Foundation\Blender\4.5\extensions\blender_org\export_paper_model\unfolder.py", line 225, in save
+    self.mesh.pages = paginate_islands(self.mesh.islands, printable_size, properties.nesting_method)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Dell\AppData\Roaming\Blender Foundation\Blender\4.5\extensions\blender_org\export_paper_model\unfolder.py", line 116, in paginate_islands
+    raise UnfoldError(
+bl_ext.blender_org.export_paper_model.unfolder.UnfoldError: UnfoldError("""An island is too big to fit onto page of the given size. Either downscale the model or find and split that island manually.
+Export failed, sorry.""")
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\RVCE\Sem 3\IBM SkillsBuild\3D\image-to-3d-viewer\backend\blender_pipeline.py", line 310, in run_morpho_dynamic_pipeline
+    bpy.ops.export_mesh.paper_model(
+  File "D:\Blender Foundation\Blender 4.5\4.5\scripts\modules\bpy\ops.py", line 109, in __call__
+    ret = _op_call(self.idname_py(), kw)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Invalid Input Error: Error: Object "world" is not a mesh
+
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\RVCE\Sem 3\IBM SkillsBuild\3D\image-to-3d-viewer\backend\blender_pipeline.py", line 374, in <module>
+    run_morpho_dynamic_pipeline()
+  File "D:\RVCE\Sem 3\IBM SkillsBuild\3D\image-to-3d-viewer\backend\blender_pipeline.py", line 358, in run_morpho_dynamic_pipeline
+    raise RuntimeError(error_msg)
+RuntimeError: All SVG export methods failed.
+  - Direct module error: UnfoldError("""An island is too big to fit onto page of the given size. Either downscale the model or find and split that island manually.
+Export failed, sorry.""")
+  - Operator error: Invalid Input Error: Error: Object "world" is not a mesh
+
+
+Possible causes:
+  1. io_mesh_paper_model addon not properly installed/enabled
+  2. Mesh still too complex despite optimization (1500 faces)
+  3. Non-manifold geometry or self-intersections in mesh
+  4. Addon incompatible with Blender version (requires 4.2+)
+Exception ignored in: <function Unfolder.__del__ at 0x000001F2AF0BBE20>
+Traceback (most recent call last):
+  File "C:\Users\Dell\AppData\Roaming\Blender Foundation\Blender\4.5\extensions\blender_org\export_paper_model\unfolder.py", line 174, in __del__
+    self.mesh.delete_uvmap()
+  File "C:\Users\Dell\AppData\Roaming\Blender Foundation\Blender\4.5\extensions\blender_org\export_paper_model\unfolder.py", line 284, in delete_uvmap
+    self.data.loops.layers.uv.remove(self.looptex)
+    ^^^^^^^^^^^^^^^
+ReferenceError: BMesh data of type BMesh has been removed

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image → 3D Mesh Viewer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+<header>
+  <span class="logo">&#x1F9CA;</span>
+  <h1>Image &#x2192; 3D Mesh Viewer</h1>
+  <div class="chips">
+    <span class="chip free">&#x1F917; TRELLIS / ZeroGPU</span>
+    <span class="chip">Three.js</span>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside>
+
+    <!-- Info box -->
+    <div class="section">
+      <div class="sec-label">&#x1F50C; Engine</div>
+      <div class="info-box">
+        Runs <strong>TRELLIS</strong> on HuggingFace's own <strong>ZeroGPU</strong> fleet &mdash;
+        no personal GPU, no self-hosting needed. HF spins up an A100 on demand.<br><br>
+        A free HF account + token skips the anonymous queue and gives higher priority.
+      </div>
+      <label>HuggingFace Token <span style="opacity:.5">(optional but faster)</span></label>
+      <input type="password" id="hf-token" placeholder="hf_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+      <div class="hint">Get yours: <a href="https://huggingface.co/settings/tokens" target="_blank" style="color:#818cf8">huggingface.co &rarr; Settings &rarr; Access Tokens</a> &rarr; New token (read)</div>
+    </div>
+
+    <!-- Image Upload -->
+    <div class="section">
+      <div class="sec-label">&#x1F4F7; Upload Garment Image</div>
+
+      <!-- Single image panel -->
+      <div id="panel-single">
+        <div class="upload-zone" id="upload-zone-single">
+          <input type="file" id="image-input-single" accept="image/png,image/jpeg,image/webp">
+          <div class="upload-icon">&#x1F5BC;&#xFE0F;</div>
+          <div class="upload-text">Drop image here or click to browse</div>
+          <div class="upload-hint" id="hint-single">PNG / JPG / WebP &middot; Single object on clean background</div>
+        </div>
+        <img id="preview-single" alt="preview" style="display:none;width:100%;max-height:160px;object-fit:contain;border-radius:8px;margin-top:8px;background:var(--surface2)">
+      </div>
+
+      <div class="cb-row">
+        <input type="checkbox" id="remove-bg" checked>
+        <label for="remove-bg">Auto-remove background</label>
+      </div>
+    </div>
+
+    <!-- Generate -->
+    <div class="section">
+      <button class="btn btn-primary" id="gen-btn" onclick="generate()" disabled>
+        &#x2728; Generate 3D Mesh
+      </button>
+      <div class="status" id="status-bar">
+        <div class="spinner" id="spinner"></div>
+        <span id="status-txt"></span>
+      </div>
+      <div class="prog-wrap" id="prog-wrap">
+        <div class="prog-bar" id="prog-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Downloads -->
+    <div class="section" id="dl-section" style="display:none">
+      <div class="sec-label">&#x2B07;&#xFE0F; Export</div>
+      <div class="dl-row" style="display:flex; gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="downloadGlb()" style="flex:1;">&#x1F4E6; 3D Model (GLB)</button>
+        <button id="dl-svg-btn" class="btn btn-ghost btn-sm" onclick="downloadSvg()" style="flex:1; display:none;">&#x1F4CF; 2D Pattern (SVG)</button>
+      </div>
+    </div>
+
+    <!-- Blender Dieline Guide -->
+    <div class="section">
+      <div class="coll-hd" id="bl-hd" onclick="toggleBlender()">
+        <div class="sec-label" style="margin:0">&#x1F527; Blender 2D Pattern Generator</div>
+        <span class="arr">&#x25BE;</span>
+      </div>
+      <div class="coll-body" id="bl-body" style="display:block;">
+        <div class="info-box" style="margin-top:10px">
+          Unfold the generated 3D mesh into a flat-cut dieline using your <strong>MorphoPackEngine</strong> pipeline (Blender Paper Model). The 3D measurements will be automatically stamped onto the pattern!
+        </div>
+        
+        <button id="gen-dieline-btn" class="btn btn-primary" onclick="generateDieline()" disabled style="margin-top:10px; background:linear-gradient(135deg, #f59e0b, #d97706);">
+          &#x2702;&#xFE0F; Generate 2D Pattern
+        </button>
+
+        <div class="info-box warn-box" style="margin-top:10px;">
+          <strong>Note:</strong> Requires Blender &ge; 4.2 installed in your PATH and the <em>MP</em> folder present.
+        </div>
+      </div>
+    </div>
+
+
+  </aside>
+
+  <!-- VIEWPORT -->
+  <div class="viewport" style="display:flex; flex-direction:column;">
+    <div style="display:flex; background:var(--surface2); border-bottom:1px solid var(--border); padding:0 10px; align-items:center;">
+      <button id="vp-tab-3d" class="tab active" style="border:none; border-bottom:2px solid var(--accent); border-radius:0; padding:10px 20px; font-size:0.8rem; background:transparent;" onclick="switchViewportTab('3d')">🎮 3D Mesh</button>
+      <button id="vp-tab-2d" class="tab" style="border:none; border-bottom:2px solid transparent; border-radius:0; padding:10px 20px; font-size:0.8rem; background:transparent;" onclick="switchViewportTab('2d')">📐 2D Dieline (SVG)</button>
+      <div style="flex:1"></div>
+      <button id="tab-dl-glb" class="btn btn-ghost btn-sm" onclick="downloadGlb()" style="display:none; height:28px; padding:0 10px; font-size:0.75rem;">&#x1F4E6; Download GLB</button>
+      <button id="tab-dl-svg" class="btn btn-ghost btn-sm" onclick="downloadSvg()" style="display:none; height:28px; padding:0 10px; font-size:0.75rem; margin-left:8px;">&#x1F4CF; Download SVG</button>
+    </div>
+    
+    <div style="position:relative; flex:1; overflow:hidden;">
+      <canvas id="three-canvas" style="width:100%; height:100%; display:block;"></canvas>
+      <div id="svg-container" style="width:100%; height:100%; display:none; background:#fff; overflow:auto; padding:20px;">
+        <!-- SVG will be injected here -->
+      </div>
+      
+      <div class="vp-overlay" id="vp-overlay">
+        <div class="vp-placeholder">
+          <span class="big">&#x1F9CA;</span>
+          <div>Generate a 3D model to view it here</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="model-badge" id="model-badge"></div>
+    <div class="vp-controls">
+      <button class="vp-btn" title="Reset camera"   onclick="resetCamera()">&#x2299;</button>
+      <button class="vp-btn" title="Wireframe"      onclick="toggleWire()">&#x2B21;</button>
+      <button class="vp-btn" title="Toggle lights"  onclick="toggleLights()">&#x1F4A1;</button>
+      <button class="vp-btn" title="Toggle grid"    onclick="toggleGrid()">&#x229E;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Application Script (v5 cache bust) -->
+<script type="module" src="js/main.js?v=5"></script>
+</body>
+</html>

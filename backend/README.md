@@ -56,7 +56,7 @@ backend/
 ├── services/             # Business logic — implement your feature here
 │   ├── image_service.py  # rembg + OpenCV pipeline    (Member 5)
 │   ├── mesh_service.py   # Blender subprocess call    (Member 1 & 2)
-│   └── ai_service.py     # Watson + watsonx.ai calls  (Member 3 & 4)
+│   └── ai_service.py     # Gemini AI & BOB chatbot    (Member 3 & 4)
 │
 ├── uploads/              # Incoming uploaded images (auto-created, git-ignored)
 └── temp/                 # Generated GLTF, SVG, enhanced PNGs (git-ignored)
@@ -98,11 +98,11 @@ def generate(measurements: dict, style: str, image_url: str | None) -> dict:
 
 **Member 3 & 4 — `services/ai_service.py`**
 ```python
-def chat(message: str, session_id: str | None) -> dict:
-    # Watson Assistant call, returns { reply, session_id }
+def chat(message: str, session_id: str | None, user_context: dict | None) -> dict:
+    # Google Gemini AI call (with fallback), returns { reply, session_id, recommendations }
 
-def recommend(skin_tone: str, height_cm: float, occasion: str) -> dict:
-    # watsonx.ai call, returns { recommendations[] }
+def recommend(skin_tone: str, height_cm: float, occasion: str, user_context: dict | None) -> dict:
+    # Google Gemini structured recommendation call (JSON mode), returns { recommendations[] }
 ```
 
 ---
@@ -135,14 +135,16 @@ curl -X POST http://localhost:8000/recommend \
 Copy `../.env.example` to `.env` in the root.  
 `config.py` loads it automatically.
 
-| Variable | Required By |
-|---|---|
-| `WATSON_ASSISTANT_API_KEY` | Member 3 & 4 |
-| `WATSON_ASSISTANT_ID` | Member 3 & 4 |
-| `WATSONX_API_KEY` | Member 3 & 4 |
-| `WATSONX_PROJECT_ID` | Member 3 & 4 |
-| `BLENDER_PATH` | Member 1 & 2 |
-| `HUGGINGFACE_API_KEY` | Member 3 & 4 (fallback) |
+| Variable | Required By | Description |
+|---|---|---|
+| `GEMINI_API_KEY` | Member 3 & 4 | Google Gemini API Key (Free tier from Google AI Studio) |
+| `GEMINI_MODEL` | Member 3 & 4 | Optional: Default `gemini-1.5-flash` |
+| `BLENDER_PATH` | Member 1 & 2 | Path to Blender executable |
+| `WATSON_ASSISTANT_API_KEY` | Member 3 & 4 | (Optional legacy fallback) |
+| `WATSON_ASSISTANT_ID` | Member 3 & 4 | (Optional legacy fallback) |
+| `WATSONX_API_KEY` | Member 3 & 4 | (Optional legacy fallback) |
+| `WATSONX_PROJECT_ID` | Member 3 & 4 | (Optional legacy fallback) |
+| `HUGGINGFACE_API_KEY` | Member 3 & 4 | (Optional fallback) |
 
 ---
 

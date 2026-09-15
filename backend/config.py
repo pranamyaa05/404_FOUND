@@ -7,21 +7,31 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path="../.env")  # root .env file
+load_dotenv(dotenv_path=".env")     # backend local .env file
 
 
 class Settings(BaseSettings):
-    # IBM Watson Assistant
+    # Google Gemini AI
+    GEMINI_API_KEY: str = ""
+    GOOGLE_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-3.5-flash-lite"
+
+    # IBM Watson Assistant (legacy fallback)
     WATSON_ASSISTANT_API_KEY: str = ""
     WATSON_ASSISTANT_URL: str = "https://api.us-south.assistant.watson.cloud.ibm.com"
     WATSON_ASSISTANT_ID: str = ""
 
-    # IBM watsonx.ai
+    # IBM watsonx.ai (legacy fallback)
     WATSONX_API_KEY: str = ""
     WATSONX_PROJECT_ID: str = ""
     WATSONX_URL: str = "https://us-south.ml.cloud.ibm.com"
 
     # HuggingFace fallback
     HUGGINGFACE_API_KEY: str = ""
+
+    @property
+    def effective_gemini_api_key(self) -> str:
+        return self.GEMINI_API_KEY or self.GOOGLE_API_KEY
 
     # Blender executable path
     BLENDER_PATH: str = "blender"

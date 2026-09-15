@@ -4,8 +4,8 @@ AI & Chatbot Router — BOB
 Owner: Member 3 & 4
 
 Endpoints:
-    POST /chat           → Watson Assistant + watsonx.ai + rule-based fallback
-    POST /recommend      → Style/fabric recommendations with colours
+    POST /chat           → Google Gemini + Watson / watsonx + rule-based fallback
+    POST /recommend      → Style/fabric recommendations with colours (Gemini JSON mode)
     POST /bob-proactive  → Server-side contextual nudge generation
 """
 

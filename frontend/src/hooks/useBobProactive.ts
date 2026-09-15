@@ -45,50 +45,50 @@ function getStepMessage(
   switch (step) {
     case 0:
       return {
-        text: "Welcome to the Studio! 🎨 Let's start by picking a dress style.\nNot sure which one? I've got opinions 😄",
-        quickReplies: ["What style suits me?", "Explain each style", "What's a Ghagra?"],
+        text: "okay so first things first — pick a style 👀\nif you're not sure which one, just tell me the occasion and I'll narrow it down.",
+        quickReplies: ["what suits me?", "explain each style", "what's a Ghagra?"],
       };
 
     case 1:
       return {
         text: style
-          ? `Nice choice — **${style}**! 👌\n\nNow upload a reference photo of the design you have in mind. Clear photos on plain backgrounds work best — I'll clean it up either way.`
-          : "Now upload a reference photo of your dress design. The clearer the better — I'll handle the rest.",
-        quickReplies: ["What makes a good photo?", "Can I use a sketch?"],
+          ? `${style} — good pick 👌 now upload a reference photo of what you have in mind. plain background helps but honestly I'll work with whatever you've got.`
+          : "upload a reference photo of the design you want. a photo on a hanger, a screenshot, anything works.",
+        quickReplies: ["what makes a good photo?", "can I use a sketch?"],
       };
 
     case 2: {
       const contextParts: string[] = [];
-      if (tone)  contextParts.push(`I can see your skin tone is **${tone}**`);
-      if (style) contextParts.push(`you're going for a **${style}**`);
+      if (tone)  contextParts.push(`${tone} skin tone`);
+      if (style) contextParts.push(`${style}`);
 
       const intro = contextParts.length > 0
-        ? `${contextParts.join(", ")} — I'll keep all of that in mind for fabric and colour suggestions! 🧵`
-        : "Time to enter your measurements — all in centimetres.";
+        ? `got it — ${contextParts.join(", ")}. I'll use that when I suggest fabrics and colours 🧵`
+        : "fill in your measurements in cm — take your time, accuracy matters here.";
 
       return {
-        text: `${intro}\n\nNeed help taking a measurement? Just ask.`,
-        quickReplies: ["How to measure chest?", "How to measure hip?", "What is ease allowance?"],
+        text: `${intro}\n\nneed help measuring anything? just ask.`,
+        quickReplies: ["how to measure chest?", "how to measure hip?", "what's ease allowance?"],
       };
     }
 
     case 3: {
       let heightNote = "";
       if (height && height < 155) {
-        heightNote = "\n\nSince you're on the petite side, I'd avoid very heavy fabrics — they can overwhelm the silhouette. Ask me for alternatives!";
+        heightNote = "\n\nalso — since you're on the shorter side, I'd skip heavy fabrics like velvet or brocade for this one. ask me for lighter options.";
       } else if (height && height > 170) {
-        heightNote = "\n\nYour height is perfect for dramatic floor-length styles — Anarkali and full Ghagra will look stunning on you.";
+        heightNote = "\n\nyour height is great for dramatic floor-length cuts. Anarkali or a full Ghagra would look really good.";
       }
       return {
-        text: `Here's your 3D preview! 🎉 Rotate it, zoom in, check the fit from all angles.${heightNote}`,
-        quickReplies: ["Suggest a fabric for this style", "How does this look for a wedding?", "Explain the silhouette"],
+        text: `there's your 3D preview 🎉 rotate it, zoom in, see how the proportions sit.${heightNote}`,
+        quickReplies: ["suggest a fabric for this", "how does this look for a wedding?", "explain the silhouette"],
       };
     }
 
     case 4:
       return {
-        text: "Your tailor-ready pattern is ready! 📐\n\nEach panel includes a **1.5 cm seam allowance**. Print at **1:1 scale** and cut directly on the lines — no extra margin needed.",
-        quickReplies: ["Explain the panels", "What is seam allowance?", "How do I hand this to a tailor?"],
+        text: "pattern's ready 📐 each panel has a 1.5 cm seam allowance built in. print at 1:1 scale and cut on the lines — no extra margin needed.\n\nwant me to explain what each panel is?",
+        quickReplies: ["explain the panels", "what is seam allowance?", "how do I give this to a tailor?"],
       };
 
     default:
@@ -100,24 +100,24 @@ function getStepMessage(
 
 const IDLE_MESSAGES: Record<number, ProactivePayload> = {
   0: {
-    text: "Still deciding on a style? I can help! Tell me the occasion and I'll narrow it down for you. 😄",
-    quickReplies: ["Help me choose", "What's best for a wedding?", "What's most popular?"],
+    text: "still deciding? tell me the occasion — wedding, daily wear, festival — and I'll point you in the right direction 😄",
+    quickReplies: ["help me choose", "what's best for a wedding?", "what's most popular?"],
   },
   1: {
-    text: "Having trouble with the photo? Even a photo of a dress on a hanger works well. I'll isolate the design. 📸",
-    quickReplies: ["What file formats work?", "Can I use a screenshot?"],
+    text: "stuck on the photo? even a dress on a hanger or a screenshot from Pinterest works. I'll isolate what matters 📸",
+    quickReplies: ["what file formats work?", "can I use a screenshot?"],
   },
   2: {
-    text: "Measurements can be tricky — want me to walk you through each one step by step? 📏",
-    quickReplies: ["Yes, walk me through it", "Which measurement matters most?"],
+    text: "measurements tricky? I can walk you through each one — chest, waist, hip, all of it 📏",
+    quickReplies: ["yes, walk me through it", "which one matters most?"],
   },
   3: {
-    text: "The 3D preview might take a moment if the backend is still processing. In the meantime — want fabric suggestions for this style? 🧵",
-    quickReplies: ["Suggest fabrics", "What colours suit me?"],
+    text: "3D model still loading? backend might be processing — shouldn't be long. want fabric suggestions while you wait? 🧵",
+    quickReplies: ["suggest fabrics", "what colours suit me?"],
   },
   4: {
-    text: "Ready to take the pattern to your tailor? I can explain what each panel means if that helps! 📐",
-    quickReplies: ["Explain the panels", "What should I tell my tailor?"],
+    text: "ready to take this to a tailor? I can break down what each panel means if that helps 📐",
+    quickReplies: ["explain the panels", "what should I tell my tailor?"],
   },
 };
 

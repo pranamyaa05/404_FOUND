@@ -44,18 +44,18 @@ type Message = TextMessage | RecommendMessage | QuickReplyMessage;
 // ─── Quick reply sets BOB uses contextually ───────────────────────────────────
 
 const INITIAL_QUICK_REPLIES = [
-  "Suggest me a style 🎨",
-  "Which fabric should I use? 🧵",
-  "How does this app work? 🗺️",
+  "suggest me a style 🎨",
+  "which fabric should I use? 🧵",
+  "how does this app work? 🗺️",
   "I'm a tailor 📐",
 ];
 
 const STEP_QUICK_REPLIES: Record<number, string[]> = {
-  0: ["What style suits me?", "Explain Ghagra", "Explain Kurta"],
-  1: ["Tips for a good photo", "Why enhance the image?"],
-  2: ["How do I measure chest?", "What is ease allowance?"],
-  3: ["What am I looking at?", "Can I rotate the model?"],
-  4: ["How to read die-lines?", "What is seam allowance?"],
+  0: ["what style suits me?", "explain Ghagra", "explain Kurta"],
+  1: ["tips for a good photo", "why enhance the image?"],
+  2: ["how do I measure chest?", "what is ease allowance?"],
+  3: ["what am I looking at?", "can I rotate the model?"],
+  4: ["how to read die-lines?", "what is seam allowance?"],
 };
 
 // ─── ID generator ─────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ const WELCOME_MESSAGE: QuickReplyMessage = {
   id: "welcome",
   role: "bob",
   type: "quick_replies",
-  text: "Hey! I'm BOB — Built On IBM 🎨✨\nI'm your personal fashion designer AI. I know Indian ethnic wear inside out — styles, fabrics, cuts, the works.\n\nWhat can I do for you today?",
+  text: "hey, I'm BOB 👋 powered by Gemini, your fashion AI — I know Indian ethnic wear pretty well. styles, fabrics, cuts, what works for your body type, the whole thing.\n\nwhat do you need?",
   replies: INITIAL_QUICK_REPLIES,
   timestamp: new Date(),
 };
@@ -189,7 +189,7 @@ export default function ChatWidget() {
           id: newId(),
           role: "bob",
           type: "text",
-          text: "Hmm, I lost connection for a second 😅 Try again in a moment!",
+          text: "lost connection for a sec 😅 try again in a moment.",
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, errMsg]);
@@ -293,7 +293,7 @@ export default function ChatWidget() {
                 </span>
               </div>
               <p className="text-gray-400 text-[10px] truncate">
-                Powered by IBM Watson &amp; watsonx.ai
+                Powered by Google Gemini
               </p>
             </div>
             {/* Minimise / maximise */}

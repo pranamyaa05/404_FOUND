@@ -94,7 +94,7 @@ Once backend is running, visit: `http://localhost:8000/docs` for auto-generated 
 | POST | `/enhance-image` | Member 5 | Remove distractions from dress image |
 | POST | `/generate-mesh` | Member 1 & 2 | Generate 3D GLTF mesh + SVG die-lines |
 | POST | `/recommend` | Member 3 & 4 | AI fabric & style recommendations |
-| POST | `/chat` | Member 3 & 4 | Watson chatbot proxy |
+| POST | `/chat` | Member 3 & 4 | AI chatbot conversation (Gemini + fallbacks) |
 | GET | `/styles` | — | List all dress styles from data/ |
 
 ---
@@ -111,8 +111,8 @@ feature/xxx   → your individual feature branches
 
 ---
 
-## IBM Tools Used
+## AI & Cloud Technologies
 
-- **Watson Assistant** — Chatbot and guided user flows
-- **watsonx.ai** — Fabric and style recommendation engine
-- **IBM Cloud** — Deployment (post-selection)
+- **Google Gemini** — Primary conversational assistant (BOB) & structured style/fabric recommendation engine (Google AI Studio free tier)
+- **IBM Watson / watsonx.ai** — Supported as optional legacy fallbacks
+

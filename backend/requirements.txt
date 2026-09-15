@@ -9,10 +9,12 @@ opencv-python-headless==4.10.0.84
 rembg                  # background / distraction removal
 mediapipe             # body landmark detection for garment isolation
 
-# ── AI / Watson  (Member 3 & 4) ───────────────────────────
-ibm-watson==11.2.0              # Watson Assistant SDK
+# ── AI / Gemini (Member 3 & 4) ────────────────────────────
+google-generativeai>=0.7.2        # Google Gemini AI SDK
+ibm-watson==11.2.0              # Watson Assistant SDK (legacy fallback)
 ibm-cloud-sdk-core==3.26.1
-requests>=2.32.4              # HTTP calls to watsonx.ai REST API
+requests>=2.32.4              # HTTP calls to AI REST APIs
+
 
 # ── Utilities ─────────────────────────────────────────────
 python-dotenv==1.0.1           # load .env file

@@ -4,8 +4,8 @@ AI & Chatbot Service — BOB
 Owner: Member 3 & 4
 
 Handles:
-    chat()           → IBM Watson Assistant + knowledge-grounded fallback
-    recommend()      → watsonx.ai style/fabric recommendations with fallback chain
+    chat()           → Google Gemini (primary) + Watson / watsonx + rule-based fallback
+    recommend()      → Google Gemini style/fabric recommendations with fallback chain
     bob_proactive()  → server-side generation of contextual nudge messages
 
 Architecture:
@@ -13,21 +13,39 @@ Architecture:
     and injects it into the prompt. This ensures BOB answers from facts.
 
     Priority chain for chat:
-        1. Watson Assistant (if configured)
-        2. watsonx.ai direct LLM call (if Watson not configured)
-        3. Rule-based knowledge lookup (always works, no API keys needed)
+        1. Google Gemini (primary, fast, free tier via Google AI Studio)
+        2. Watson Assistant (if configured)
+        3. watsonx.ai direct LLM call (if configured)
+        4. Rule-based knowledge lookup (always works, zero API keys needed)
 
     Priority chain for recommend:
-        1. watsonx.ai
-        2. HuggingFace Mistral
-        3. Rule-based recommendations from knowledge base
+        1. Google Gemini (JSON mode structured output)
+        2. watsonx.ai
+        3. HuggingFace Mistral
+        4. Rule-based recommendations from knowledge base
 """
 
 import json
+import os
 import re
+import uuid
 import requests
-from ibm_watson import AssistantV2
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+
+try:
+    import google.generativeai as genai
+    HAS_GEMINI = True
+except ImportError:
+    genai = None
+    HAS_GEMINI = False
+
+try:
+    from ibm_watson import AssistantV2
+    from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+    HAS_WATSON = True
+except ImportError:
+    AssistantV2 = None
+    IAMAuthenticator = None
+    HAS_WATSON = False
 
 from config import settings
 from knowledge.fashion_knowledge import (
@@ -88,6 +106,123 @@ class UserContext:
 
 
 # ─────────────────────────────────────────────────────────────────────
+# Google Gemini client & session cache
+# ─────────────────────────────────────────────────────────────────────
+
+_gemini_configured: bool = False
+_gemini_chat_sessions: dict[str, dict] = {}
+
+
+def _configure_gemini() -> None:
+    global _gemini_configured
+    api_key = settings.effective_gemini_api_key or os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY (or GOOGLE_API_KEY) not set.")
+    genai.configure(api_key=api_key)
+    _gemini_configured = True
+
+
+GEMINI_CANDIDATE_MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-flash-latest",
+    "gemini-3.6-flash",
+    "gemini-3.8-flash",
+]
+
+
+def _chat_via_gemini(
+    message: str,
+    ctx: UserContext,
+    session_id: str | None,
+) -> dict:
+    _configure_gemini()
+
+    actual_session_id = session_id or str(uuid.uuid4())[:8]
+    session_data = _gemini_chat_sessions.get(actual_session_id)
+
+    if session_data is None:
+        knowledge_ctx = build_knowledge_context(
+            skin_tone_label=ctx.skin_tone_label,
+            height_cm=ctx.height_cm,
+            style=ctx.selected_style,
+            occasion=ctx.occasion,
+        )
+
+        system_instruction = f"""{BOB_PERSONA}
+
+--- USER PROFILE ---
+{ctx.summary()}
+
+--- FASHION KNOWLEDGE ---
+{knowledge_ctx}"""
+
+        models_to_try = [settings.GEMINI_MODEL] if settings.GEMINI_MODEL else []
+        for m in GEMINI_CANDIDATE_MODELS:
+            if m not in models_to_try:
+                models_to_try.append(m)
+
+        chat_session = None
+        chosen_model = None
+        for m_name in models_to_try:
+            try:
+                candidate = genai.GenerativeModel(
+                    model_name=m_name,
+                    system_instruction=system_instruction,
+                    generation_config=genai.GenerationConfig(
+                        temperature=0.7,
+                        max_output_tokens=350,
+                    ),
+                )
+                chat_session = candidate.start_chat(history=[])
+                chosen_model = candidate
+                break
+            except Exception as e:
+                err_str = str(e).lower()
+                if "404" in err_str or "not found" in err_str or "no longer available" in err_str:
+                    continue
+                raise e
+
+        if chat_session is None:
+            raise RuntimeError("Could not initialize any Gemini model.")
+
+        session_data = {
+            "session": chat_session,
+            "last_summary": ctx.summary(),
+            "model": chosen_model,
+            "system_instruction": system_instruction,
+        }
+        _gemini_chat_sessions[actual_session_id] = session_data
+
+    chat_session = session_data["session"]
+
+    # If user context updated noticeably, inform the assistant
+    current_summary = ctx.summary()
+    if current_summary != session_data.get("last_summary") and current_summary != "  - No profile data yet":
+        send_text = f"[Current context updated:\n{current_summary}]\n\n{message}"
+        session_data["last_summary"] = current_summary
+    else:
+        send_text = message
+
+    try:
+        resp = chat_session.send_message(send_text)
+        reply = resp.text.strip()
+    except Exception:
+        # If active session encountered an issue, retry once with a fresh chat
+        model = session_data["model"]
+        chat_session = model.start_chat(history=[])
+        session_data["session"] = chat_session
+        resp = chat_session.send_message(send_text)
+        reply = resp.text.strip()
+
+    # Clean up any prompt artifacts
+    reply = re.sub(r"^BOB:\s*", "", reply).strip()
+    if not reply:
+        reply = "I'm thinking... give me a sec! Try rephrasing your question."
+
+    return {"reply": reply, "session_id": actual_session_id, "recommendations": None}
+
+
+# ─────────────────────────────────────────────────────────────────────
 # Watson Assistant client (lazy-initialised, reused across requests)
 # ─────────────────────────────────────────────────────────────────────
 
@@ -96,6 +231,8 @@ _assistant_client: AssistantV2 | None = None
 
 def _get_assistant() -> AssistantV2:
     global _assistant_client
+    if not HAS_WATSON:
+        raise RuntimeError("ibm_watson is not installed.")
     if _assistant_client is None:
         if not settings.WATSON_ASSISTANT_API_KEY:
             raise RuntimeError("WATSON_ASSISTANT_API_KEY not set.")
@@ -171,21 +308,28 @@ def chat(
             "recommendations": rec_result["recommendations"],
         }
 
-    # Try Watson Assistant first
-    if settings.WATSON_ASSISTANT_API_KEY and settings.WATSON_ASSISTANT_ID:
+    # 1. Try Google Gemini first (free, fast, intelligent)
+    if HAS_GEMINI and settings.effective_gemini_api_key:
+        try:
+            return _chat_via_gemini(message, ctx, session_id)
+        except Exception as e:
+            print(f"[BOB] Gemini error: {e}. Falling back to Watson/watsonx.")
+
+    # 2. Try Watson Assistant second (if configured)
+    if HAS_WATSON and settings.WATSON_ASSISTANT_API_KEY and settings.WATSON_ASSISTANT_ID:
         try:
             return _chat_via_watson(message, session_id, ctx)
         except Exception as e:
             print(f"[BOB] Watson error: {e}. Falling back to watsonx.ai.")
 
-    # Try watsonx.ai as conversational LLM
+    # 3. Try watsonx.ai as conversational LLM (if configured)
     if settings.WATSONX_API_KEY and settings.WATSONX_PROJECT_ID:
         try:
             return _chat_via_watsonx(message, ctx, session_id)
         except Exception as e:
             print(f"[BOB] watsonx.ai error: {e}. Falling back to rule-based.")
 
-    # Rule-based fallback — always works
+    # 4. Rule-based fallback — always works
     return _chat_rule_based(message, ctx, session_id)
 
 
@@ -426,7 +570,7 @@ def recommend(
 ) -> dict:
     """
     Generate top-3 style + fabric + colour recommendations.
-    Priority: watsonx.ai → HuggingFace → rule-based.
+    Priority: Google Gemini → watsonx.ai → HuggingFace → rule-based.
     """
     ctx = UserContext(user_context or {
         "skin_tone_label": skin_tone,
@@ -447,19 +591,66 @@ def recommend(
         knowledge_context=knowledge_ctx,
     )
 
+    # 1. Try Google Gemini first (supports native JSON mode)
+    if HAS_GEMINI and settings.effective_gemini_api_key:
+        try:
+            return _recommend_via_gemini(prompt)
+        except Exception as e:
+            print(f"[BOB] Gemini recommend error: {e}. Trying watsonx.ai.")
+
+    # 2. Try watsonx.ai (legacy)
     if settings.WATSONX_API_KEY and settings.WATSONX_PROJECT_ID:
         try:
             return _recommend_via_watsonx(prompt)
         except Exception as e:
             print(f"[BOB] watsonx recommend error: {e}. Trying HuggingFace.")
 
+    # 3. Try HuggingFace
     if settings.HUGGINGFACE_API_KEY:
         try:
             return _recommend_via_huggingface(prompt)
         except Exception as e:
             print(f"[BOB] HuggingFace recommend error: {e}. Using rule-based.")
 
+    # 4. Rule-based fallback
     return _recommend_rule_based(skin_tone, height_cm, occasion)
+
+
+def _recommend_via_gemini(prompt: str) -> dict:
+    _configure_gemini()
+
+    models_to_try = [settings.GEMINI_MODEL] if settings.GEMINI_MODEL else []
+    for m in GEMINI_CANDIDATE_MODELS:
+        if m not in models_to_try:
+            models_to_try.append(m)
+
+    last_exc = None
+    for m_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(
+                model_name=m_name,
+                generation_config=genai.GenerationConfig(
+                    temperature=0.3,
+                    max_output_tokens=700,
+                    response_mime_type="application/json",
+                ),
+            )
+            resp = model.generate_content(prompt)
+            raw = resp.text.strip()
+            return {"recommendations": _parse_recommendations(raw)}
+        except Exception as e:
+            last_exc = e
+            err_str = str(e).lower()
+            if "404" in err_str or "not found" in err_str or "no longer available" in err_str or "not supported" in err_str:
+                print(f"[BOB] Model '{m_name}' not available. Trying fallback...")
+                continue
+            raise e
+
+    if last_exc:
+        raise last_exc
+    raise RuntimeError("No candidate Gemini model succeeded.")
+
+
 
 
 def _recommend_via_watsonx(prompt: str) -> dict:
@@ -538,55 +729,112 @@ def _parse_recommendations(raw: str) -> list:
 def _recommend_rule_based(skin_tone: str, height_cm: float, occasion: str) -> dict:
     """
     Deterministic recommendations built directly from the knowledge base.
-    Works with zero API keys — always returns sensible results.
+    Each recommendation has a different style, a different fabric, and a
+    personalised reason. Works with zero API keys.
     """
     tone_data   = SKIN_TONE_GUIDE.get(skin_tone, SKIN_TONE_GUIDE["wheatish"])
     height_cat  = get_height_category(height_cm)
     height_data = HEIGHT_GUIDE[height_cat]
     occ_data    = OCCASION_GUIDE.get(occasion, OCCASION_GUIDE["casual"])
 
-    # Pick styles that appear in both height recommendations and occasion
-    candidate_styles = (
-        set(height_data["best_styles"]) & set(occ_data.get("best_styles_hint", height_data["best_styles"]))
-        or set(height_data["best_styles"])
-    )
+    # ── Step 1: build ordered candidate list from OCCASION first ─────
+    # Occasion is the primary filter — you don't wear a casual kurta to a wedding.
+    occ_styles    = occ_data.get("best_styles", [])          # e.g. ["Ghagra / Lehenga", "Anarkali", ...]
+    height_styles = height_data.get("best_styles", [])       # e.g. ["All styles"] or specific ones
 
-    # Map style display names back to IDs
+    # Expand "All styles" shorthand
+    all_style_names = [v["full_name"] for v in STYLES.values()]
+    if "All styles" in height_styles:
+        height_styles = all_style_names
+
+    # Intersection: must suit the occasion AND the height
+    occasion_set = set(occ_styles)
+    height_set   = set(height_styles)
+    candidates   = [s for s in occ_styles if s in height_set]
+
+    # If intersection is empty, fall back to occasion-only list
+    if not candidates:
+        candidates = occ_styles[:]
+
+    # ── Step 2: avoid duplicates — pick up to 3 distinct styles ──────
     style_name_to_id = {v["full_name"]: k for k, v in STYLES.items()}
+    picked: list[tuple[str, str]] = []  # (style_full_name, style_id)
+    seen = set()
+    for s in candidates:
+        sid = style_name_to_id.get(s)
+        if sid and sid not in seen and len(picked) < 3:
+            picked.append((s, sid))
+            seen.add(sid)
+
+    # Pad to 3 with occasion-appropriate fallbacks (no repeats)
+    fallbacks_by_occasion = {
+        "wedding":  ["ghagra", "anarkali", "blouse_saree"],
+        "festival": ["anarkali", "ghagra", "salwar_kameez"],
+        "formal":   ["salwar_kameez", "anarkali", "kurta"],
+        "casual":   ["daily_wear", "kurta", "salwar_kameez"],
+    }
+    for fid in fallbacks_by_occasion.get(occasion, ["kurta", "salwar_kameez", "anarkali"]):
+        if len(picked) >= 3:
+            break
+        if fid not in seen:
+            picked.append((STYLES[fid]["full_name"], fid))
+            seen.add(fid)
+
+    # ── Step 3: for each style pick a DIFFERENT fabric ────────────────
+    occ_fabrics   = occ_data["best_fabrics"]          # ordered by preference
+    avoid_fabrics = set(occ_data.get("avoid_fabrics", []))
+    used_fabrics: set[str] = set()
 
     recs = []
-    picked_styles = list(candidate_styles)[:3]
+    for i, (style_name, style_id) in enumerate(picked[:3]):
+        style_data = STYLES[style_id]
 
-    # Pad with defaults if not enough candidates
-    defaults = ["Kurta", "Anarkali Suit", "Salwar Kameez"]
-    for d in defaults:
-        if len(picked_styles) >= 3:
-            break
-        if d not in picked_styles:
-            picked_styles.append(d)
+        # Best fabric = first one that is in BOTH occasion list AND style list,
+        # not in avoid list, and not already used in this recommendation set.
+        style_fabric_set = set(style_data["best_fabrics"])
+        fabric = None
+        for f in occ_fabrics:
+            if f in style_fabric_set and f not in avoid_fabrics and f not in used_fabrics:
+                fabric = f
+                break
+        # Fallback: first style fabric not yet used
+        if not fabric:
+            for f in style_data["best_fabrics"]:
+                if f not in used_fabrics:
+                    fabric = f
+                    break
+        if not fabric:
+            fabric = style_data["best_fabrics"][0]
+        used_fabrics.add(fabric)
 
-    # Build each recommendation
-    for i, style_name in enumerate(picked_styles[:3]):
-        style_id = style_name_to_id.get(style_name, "kurta")
-        style_data = STYLES.get(style_id, STYLES["kurta"])
+        # ── Step 4: colour suggestions — rotate across the tone's palette ──
+        raw_colors = tone_data["best_colors"]
+        # Clean "(parenthetical note)" from colour names
+        clean_colors = [c.split("(")[0].strip() for c in raw_colors]
+        # Rotate so each card shows a different colour as the lead
+        start = (i * 2) % len(clean_colors)
+        rotated = clean_colors[start:] + clean_colors[:start]
+        colors = rotated[:3]
 
-        # Pick the best fabric for this style + occasion
-        occ_fabrics = set(occ_data["best_fabrics"])
-        style_fabrics = set(style_data["best_fabrics"])
-        overlap = list(occ_fabrics & style_fabrics)
-        fabric = overlap[0] if overlap else style_data["best_fabrics"][0]
+        # ── Step 5: personalised reason per card ─────────────────────────
+        fabric_feel  = FABRICS.get(fabric, {}).get("feel", "beautiful drape").rstrip(".")
+        occ_vibe     = occ_data["vibe"]
+        height_notes = height_data["silhouette_advice"]
+        height_tip   = height_notes[i % len(height_notes)] if height_notes else ""
 
-        # Colour suggestions from skin tone guide
-        colors = tone_data["best_colors"][:3]
-        # Format as simple strings
-        colors = [c.split("(")[0].strip() for c in colors]
+        reason_templates = [
+            f"{style_data['full_name']} in {fabric} is the right call for {occasion} — "
+            f"{fabric_feel.lower()} is exactly the energy you want. "
+            f"{colors[0]} will look great against {tone_data['display'].lower()} skin.",
 
-        # Build reason from known facts
-        reason = (
-            f"{tone_data['display']} skin tones look great in {colors[0].lower()} — "
-            f"{fabric} adds the right {FABRICS.get(fabric, {}).get('feel', 'texture')} "
-            f"for a {occasion} occasion."
-        )
+            f"{fabric} {style_data['full_name']} for {occasion} makes sense — "
+            f"{style_data['full_name']} suits a {height_cat} frame well "
+            f"and {fabric_feel.lower()} keeps the look polished without overdoing it.",
+
+            f"Go with {fabric} for this — {fabric_feel.lower()} reads well at a {occasion}. "
+            f"{colors[0]} on {tone_data['display'].lower()} skin in a {style_data['full_name']} silhouette is a solid combination.",
+        ]
+        reason = reason_templates[i % len(reason_templates)]
 
         recs.append({
             "style":      style_data["full_name"],

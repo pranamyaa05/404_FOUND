@@ -33,11 +33,12 @@
 │      temp/<uuid>.gltf + temp/<uuid>.svg                     │
 │                                                             │
 │  POST /chat ───────────► ai_service.chat()                  │
-│         │                  IBM Watson Assistant             │
+│         │                  Google Gemini (primary)          │
+│         │                  Watson / watsonx (fallback)      │
 │                                                             │
 │  POST /recommend ──────► ai_service.recommend()             │
-│                           IBM watsonx.ai                    │
-│                           HuggingFace (fallback)            │
+│                           Google Gemini JSON mode (primary) │
+│                           watsonx / HuggingFace (fallback)  │
 │                                                             │
 │  GET  /styles ─────────► styles_router.py → data/styles.json│
 │                                                             │
@@ -99,8 +100,8 @@ POST /generate-mesh  { measurements, style, enhanced_image_url }
 | Blender called as subprocess | Keeps 3D logic in Python/Blender where the team is comfortable |
 | GLTF format | Best Three.js support, compact, supports textures and animations |
 | SVG for die-lines | Scalable, printable, web-viewable without extra libraries |
-| IBM Watson + watsonx.ai | Aligns with IBM SkillsBuild hackathon judging criteria |
-| HuggingFace fallback | Allows development without IBM keys during early stages |
+| Google Gemini AI | High-speed, high-quality free tier via Google AI Studio for chat and JSON recommendations |
+| Fallback chain (Watson/watsonx/HF/Rules) | Zero downtime; app continues to function seamlessly with or without API keys |
 
 ---
 

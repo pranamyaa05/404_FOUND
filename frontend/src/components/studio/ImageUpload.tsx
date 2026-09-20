@@ -1,17 +1,15 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useStudioStore } from "@/store/studioStore";
+import { useStudioStore, GarmentImage } from "@/store/studioStore";
 import { enhanceImage } from "@/lib/api";
 import { fireBobMessage } from "@/hooks/useBobProactive";
 
 interface Props {
   onNext: () => void;
   onBack: () => void;
-  onSkipToMesh?: () => void;
 }
 
-/** Full-screen lightbox overlay for viewing an image at full resolution. */
 function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
   return (
     <div
@@ -24,181 +22,143 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
         src={src}
         alt={alt}
         onClick={(e) => e.stopPropagation()}
-        style={{
-          maxWidth: "92vw",
-          maxHeight: "92vh",
-          objectFit: "contain",
-          borderRadius: 12,
-          boxShadow: "0 8px 60px rgba(0,0,0,0.7)",
-        }}
+        style={{ maxWidth: "92vw", maxHeight: "92vh", objectFit: "contain", borderRadius: 12 }}
       />
-      <button
-        onClick={onClose}
-        className="absolute top-5 right-6 text-white text-3xl font-bold leading-none opacity-70 hover:opacity-100 transition-opacity"
-        title="Close"
-      >
-        ✕
-      </button>
+      <button onClick={onClose} className="absolute top-5 right-6 text-white text-3xl font-bold">✕</button>
     </div>
   );
 }
 
-/** Wraps an image with a fullscreen button in the top-right corner. */
 function ImageWithFullscreen({ src, alt, className }: { src: string; alt: string; className?: string }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   return (
-    <div className="relative group">
+    <div className="relative group w-full h-full">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt} className={className} />
       <button
         onClick={() => setLightboxOpen(true)}
-        title="View full size"
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 hover:bg-black/80 text-white rounded-lg px-2 py-1 text-xs flex items-center gap-1"
-      >
-        ⛶ Full
-      </button>
-      {lightboxOpen && (
-        <Lightbox src={src} alt={alt} onClose={() => setLightboxOpen(false)} />
-      )}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-black/60 text-white rounded px-2 py-1 text-xs"
+      >⛶</button>
+      {lightboxOpen && <Lightbox src={src} alt={alt} onClose={() => setLightboxOpen(false)} />}
     </div>
   );
 }
 
-/**
- * Step 1 — Upload dress reference image.
- * Calls /enhance-image on the backend to remove hair/distractions.
- *
- * Owner: Member 5 (image enhancement)
- */
-export default function ImageUpload({ onNext, onBack, onSkipToMesh }: Props) {
-  const { originalImage, enhancedImage, setOriginalImage, setEnhancedImage } = useStudioStore();
-  const [preview, setPreview] = useState<string | null>(
-    originalImage ? URL.createObjectURL(originalImage) : null
-  );
-  const [enhancedPreview, setEnhancedPreview] = useState<string | null>(enhancedImage);
-  const [isEnhancing, setIsEnhancing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function ImageUpload({ onNext, onBack }: Props) {
+  const { selectedStyles, garmentGallery, addGarmentImage, updateGarmentImage } = useStudioStore();
+  const [enhancingMap, setEnhancingMap] = useState<Record<string, boolean>>({});
+  const [errorMap, setErrorMap] = useState<Record<string, string | null>>({});
 
-  const handleFileChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, styleName: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      if (!["image/png", "image/jpeg"].includes(file.type)) {
-        setError("Please upload a PNG or JPG image.");
-        return;
-      }
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      setErrorMap(prev => ({ ...prev, [styleName]: "Please upload a PNG or JPG image." }));
+      return;
+    }
+    setErrorMap(prev => ({ ...prev, [styleName]: null }));
 
-      setError(null);
-      setOriginalImage(file);
-      setPreview(URL.createObjectURL(file));
-      setEnhancedPreview(null);
+    const id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+    
+    // Check if replacing an existing style
+    const existing = garmentGallery.find(g => g.style === styleName);
+    if (existing) {
+      updateGarmentImage(existing.id, { original: file, enhanced: null });
+    } else {
+      addGarmentImage({ id, style: styleName, original: file, enhanced: null });
+    }
+    const targetId = existing ? existing.id : id;
 
-      setIsEnhancing(true);
-      try {
-        const enhanced = await enhanceImage(file);
-        setEnhancedImage(enhanced.enhanced_image_url);
-        setEnhancedPreview(enhanced.enhanced_image_url);
-        fireBobMessage({
-          text: "Image cleaned up!  Now let's get your measurements so I can build a perfectly fitted 3D preview.",
-          quickReplies: ["How to measure chest?", "How to measure waist?"],
-        });
-      } catch (err: any) {
-        setError(`Enhancement failed: ${err.message || String(err)}. You can still continue with the original.`);
-      } finally {
-        setIsEnhancing(false);
-      }
-    },
-    [setOriginalImage, setEnhancedImage]
-  );
+    setEnhancingMap(prev => ({ ...prev, [styleName]: true }));
+    try {
+      const enhanced = await enhanceImage(file);
+      updateGarmentImage(targetId, { enhanced: enhanced.enhanced_image_url });
+      fireBobMessage({
+        text: `Cleaned up your ${styleName} image!`,
+        quickReplies: [],
+      });
+    } catch (err: any) {
+      setErrorMap(prev => ({ ...prev, [styleName]: `Enhancement failed: ${err.message || String(err)}` }));
+    } finally {
+      setEnhancingMap(prev => ({ ...prev, [styleName]: false }));
+    }
+  };
+
+  const isAnyEnhancing = Object.values(enhancingMap).some(Boolean);
+  const allStylesHaveUpload = selectedStyles.length > 0 && selectedStyles.every(s => garmentGallery.some(g => g.style === s));
 
   return (
     <div className="card">
-      <h2 className="font-serif italic text-3xl text-surface-dark mb-2">Upload Dress Reference Image</h2>
-      <p className="text-surface-dark/60 mb-8">
-        Upload a photo of the dress you want to stitch. We'll remove hair and
-        background distractions automatically.
+      <h2 className="font-serif italic text-3xl text-surface-dark mb-2">Upload References</h2>
+      <p className="text-surface-dark/60 mb-6">
+        Upload a photo for each style you selected. We'll remove backgrounds automatically.
       </p>
 
-      {/* Upload area */}
-      <label className="relative block border border-dashed border-surface-dark/30 rounded-xl p-10 text-center cursor-pointer hover:border-primary/60 transition-colors mb-6 bg-surface-paper/70">
-        <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-gradient-to-b from-[#e0b57f] to-[#9a6840] shadow-[1px_2px_4px_rgba(24,15,8,.35)]" />
-        <input
-          type="file"
-          accept="image/png, image/jpeg"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        <div className="text-4xl mb-3"></div>
-        <p className="text-surface-dark/80 font-medium">Click to upload PNG or JPG</p>
-        <p className="text-surface-dark/50 text-sm mt-1">Max 10MB · Hover image to fullscreen</p>
-      </label>
+      {selectedStyles.map(styleName => {
+        const item = garmentGallery.find(g => g.style === styleName);
+        const isEnhancing = enhancingMap[styleName];
+        const error = errorMap[styleName];
 
-      {error && (
-        <p className="text-red-500 text-sm mb-4">{error}</p>
-      )}
-
-      {/* Before / After preview with fullscreen buttons */}
-      {preview && (
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div>
-            <p className="eyebrow-thread text-xs before:w-4 after:hidden mb-2">Original</p>
-            <ImageWithFullscreen
-              src={preview}
-              alt="Original"
-              className="rounded-xl w-full object-cover max-h-64 border border-surface-dark/10 shadow-[2px_6px_14px_rgba(38,27,16,.15)]"
-            />
-          </div>
-          <div>
-            <p className="eyebrow-thread text-xs before:w-4 after:hidden mb-2">
-              Enhanced {isEnhancing && "— Processing..."}
-            </p>
-            {isEnhancing ? (
-              <div className="rounded-xl w-full h-full min-h-[160px] bg-surface-paper border border-dashed border-surface-dark/20 flex items-center justify-center">
-                <span className="text-surface-dark/60 text-sm animate-pulse">
-                  Removing distractions...
-                </span>
-              </div>
-            ) : enhancedPreview ? (
-              <ImageWithFullscreen
-                src={enhancedPreview}
-                alt="Enhanced"
-                className="rounded-xl w-full object-cover max-h-64 border border-surface-dark/10 shadow-[2px_6px_14px_rgba(38,27,16,.15)]"
-              />
+        return (
+          <div key={styleName} className="mb-8 border border-surface-dark/10 p-4 rounded-xl bg-surface-light">
+            <h3 className="font-medium text-surface-dark mb-3 text-lg">{styleName}</h3>
+            
+            {!item ? (
+              <label className="relative block border border-dashed border-surface-dark/30 rounded-xl p-8 text-center cursor-pointer hover:border-primary/60 bg-surface-paper/70">
+                <input type="file" accept="image/png, image/jpeg" onChange={(e) => handleFileChange(e, styleName)} className="hidden" />
+                <p className="text-surface-dark/80 font-medium">Click to upload reference for {styleName}</p>
+              </label>
             ) : (
-              <div className="rounded-xl w-full h-full min-h-[160px] bg-surface-paper border border-dashed border-surface-dark/20 flex items-center justify-center">
-                <span className="text-surface-dark/50 text-sm">Awaiting enhancement</span>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-surface-dark/60 mb-2">Original</p>
+                  <div className="h-48">
+                    <ImageWithFullscreen src={URL.createObjectURL(item.original)} alt="Original" className="rounded-xl w-full h-full object-cover border border-surface-dark/10" />
+                  </div>
+                  <label className="text-xs mt-2 text-primary cursor-pointer hover:underline block text-center">
+                    <input type="file" accept="image/png, image/jpeg" onChange={(e) => handleFileChange(e, styleName)} className="hidden" />
+                    Replace Image
+                  </label>
+                </div>
+                <div>
+                  <p className="text-xs text-surface-dark/60 mb-2">Enhanced {isEnhancing && "— Processing..."}</p>
+                  {isEnhancing ? (
+                    <div className="rounded-xl w-full h-48 bg-surface-paper border border-dashed border-surface-dark/20 flex items-center justify-center animate-pulse">
+                      <span className="text-surface-dark/60 text-sm">Removing background...</span>
+                    </div>
+                  ) : item.enhanced ? (
+                    <div className="h-48">
+                      <ImageWithFullscreen src={item.enhanced} alt="Enhanced" className="rounded-xl w-full h-full object-cover border border-surface-dark/10" />
+                    </div>
+                  ) : null}
+                </div>
               </div>
             )}
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
-        </div>
-      )}
+        );
+      })}
 
-      <div className="flex gap-4">
-        <button onClick={onBack} className="btn-outline flex-1">
-          ← Back
-        </button>
-        <button
-          onClick={onNext}
-          disabled={!preview || isEnhancing}
-          className="btn-primary flex-1"
+      <div className="flex justify-center mt-2 mb-8">
+        <button 
+          onClick={() => {
+            const accCount = selectedStyles.filter(s => s.startsWith("Accessory")).length + 1;
+            useStudioStore.getState().toggleSelectedStyle(`Accessory ${accCount}`);
+          }}
+          className="btn-outline flex items-center gap-2 border-dashed border-2 hover:bg-surface-dark hover:text-white"
         >
-          Add Measurements →
+          <span className="text-xl leading-none">+</span> Add Accessory / Extra Item
         </button>
       </div>
 
-      {onSkipToMesh && (
-        <div className="text-center mt-3">
-          <button
-            type="button"
-            onClick={onSkipToMesh}
-            disabled={!preview || isEnhancing}
-            className="text-sm text-surface-dark/50 hover:text-surface-dark/80 underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Skip measurements → go straight to 3D Preview
-          </button>
-        </div>
-      )}
+      <div className="flex gap-4 mt-6">
+        <button onClick={onBack} className="btn-outline flex-1">← Back</button>
+        <button onClick={onNext} disabled={!allStylesHaveUpload || isAnyEnhancing} className="btn-primary flex-1">
+          Add Measurements →
+        </button>
+      </div>
+      
     </div>
   );
 }

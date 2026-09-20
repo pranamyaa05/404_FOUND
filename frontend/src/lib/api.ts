@@ -65,6 +65,69 @@ export async function generateMesh(
 }
 
 // 
+// 3D SMPL Avatar Generation
+// 
+export async function generateAvatar(measurements: {
+  height: number;
+  chest: number;
+  waist: number;
+  hips: number;
+}) {
+  const res = await fetch("http://localhost:8000/generate-avatar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ measurements }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    let errorDetail = text;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed.detail) errorDetail = parsed.detail;
+    } catch (e) {}
+    throw new Error(errorDetail || `generate-avatar failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+// 
+// Cloth Physics Simulation
+// 
+export async function simulateCloth(
+  garmentGlbUrl: string,
+  avatarGlbUrl?: string | null
+): Promise<{ draped_glb_url: string }> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6 * 60 * 1000); // 6 min
+
+  try {
+    const res = await fetch("http://localhost:8000/simulate-cloth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        garment_glb_url: garmentGlbUrl,
+        avatar_glb_url: avatarGlbUrl ?? null,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      let errorDetail = text;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.detail) errorDetail = parsed.detail;
+      } catch (e) {}
+      throw new Error(errorDetail || `simulate-cloth failed: ${res.status}`);
+    }
+    return res.json();
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// 
 // AI Style & Fabric Recommendation  (Owner: Member 3 & 4)
 // 
 export interface RecommendInput {

@@ -36,8 +36,8 @@ function getStepMessage(
   step: number,
   ctx: ReturnType<ReturnType<typeof useStudioStore.getState>["getBobContext"]>
 ): ProactivePayload | null {
-  const style = ctx.selectedStyle
-    ? ctx.selectedStyle.replace(/_/g, " ")
+  const style = ctx.selectedStyles.length > 0
+    ? ctx.selectedStyles.join(", ").replace(/_/g, " ")
     : null;
   const tone  = ctx.skinTone?.displayName ?? null;
   const height = ctx.measurements?.height ?? null;

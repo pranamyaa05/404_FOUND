@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStudioStore, SkinToneValue } from "@/store/studioStore";
 
 /**
@@ -64,11 +64,98 @@ export default function SkinToneSelector() {
   const { skinTone, setSkinTone } = useStudioStore();
   const sliderValue = skinTone?.slider ?? 40; // default to wheatish
 
+  const [showCam, setShowCam] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
   // Initialise store on mount with default
   useEffect(() => {
     if (!skinTone) setSkinTone(resolveSlider(40));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Handle webcam stream start/stop
+  useEffect(() => {
+    if (!showCam) {
+      stopTracks();
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Camera access is only available on HTTPS or localhost. Please select skin tone manually.");
+      setShowCam(false);
+      return;
+    }
+
+    let mounted = true;  // guard against StrictMode double-invoke cleanup race
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } })
+      .then((stream) => {
+        if (!mounted) { stream.getTracks().forEach(t => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(e => console.error("Video play error:", e));
+        }
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        console.error("Camera access denied or failed:", err);
+        const msg = err.name === "NotAllowedError"
+          ? "Camera permission denied. Please allow camera access in your browser settings."
+          : "Could not access camera. Please check permissions or select skin tone manually.";
+        alert(msg);
+        setShowCam(false);
+      });
+
+    return () => { mounted = false; stopTracks(); };
+  }, [showCam]);
+
+  const stopTracks = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) videoRef.current.srcObject = null;
+  };
+
+  const closeCam = () => {
+    stopTracks();
+    setShowCam(false);
+  };
+
+  const sampleCameraColor = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Sample a 10x10 block at center
+    const cx = Math.floor(canvas.width / 2);
+    const cy = Math.floor(canvas.height / 2);
+    const imgData = ctx.getImageData(cx - 5, cy - 5, 10, 10);
+    const data = imgData.data;
+
+    let r = 0, g = 0, b = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+    }
+    const count = data.length / 4;
+    r = Math.round(r / count);
+    g = Math.round(g / count);
+    b = Math.round(b / count);
+
+    // Estimate skin tone slider 0–100 based on perceived brightness/warmth
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    const estimatedSlider = Math.max(0, Math.min(100, Math.round(100 - (brightness / 255) * 100)));
+
+    setSkinTone(resolveSlider(estimatedSlider));
+    closeCam();
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSkinTone(resolveSlider(Number(e.target.value)));
@@ -97,7 +184,6 @@ export default function SkinToneSelector() {
 
       {/* Gradient track + thumb */}
       <div className="relative">
-        {/* The gradient bar behind the native range input */}
         <div
           className="absolute inset-y-0 left-0 right-0 rounded-full pointer-events-none"
           style={{
@@ -109,8 +195,6 @@ export default function SkinToneSelector() {
             transform: "translateY(-50%)",
           }}
         />
-
-        {/* Native range input — transparent track, custom thumb via CSS */}
         <input
           type="range"
           min={0}
@@ -141,9 +225,82 @@ export default function SkinToneSelector() {
         ))}
       </div>
 
-      <p className="text-xs text-surface-dark/50 mt-2">
-        BOB uses this to personalise fabric and colour suggestions for you.
-      </p>
+      <div className="flex items-center justify-between mt-2 mb-3">
+        <p className="text-xs text-surface-dark/50">
+          BOB uses this to personalise fabric and colour suggestions for you.
+        </p>
+        {!showCam ? (
+          <button
+            type="button"
+            onClick={() => setShowCam(true)}
+            className="text-xs text-primary font-medium hover:underline flex items-center gap-1 ml-2 whitespace-nowrap"
+          >
+            📷 Auto-detect from Camera
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={closeCam}
+            className="text-xs text-red-500 font-medium hover:underline flex items-center gap-1 ml-2 whitespace-nowrap"
+          >
+            ✕ Close Camera
+          </button>
+        )}
+      </div>
+
+      {/* Inline Camera Panel */}
+      {showCam && (
+        <div className="rounded-xl overflow-hidden border border-surface-dark/15 shadow-md mb-3">
+          <div className="bg-surface-dark/5 px-3 py-2 text-xs text-surface-dark/60 font-medium">
+            📷 Position your face or bare arm so the circle aligns with your skin, then click <strong>Capture</strong>.
+          </div>
+
+          {/* Live video feed */}
+          <div className="relative bg-black" style={{ aspectRatio: "4/3" }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+              style={{ transform: "scaleX(-1)" /* mirror for selfie */ }}
+            />
+            {/* Crosshair guide */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="relative">
+                <div
+                  className="w-20 h-20 rounded-full border-2 border-white border-dashed animate-pulse"
+                  style={{ boxShadow: "0 0 0 2000px rgba(0,0,0,0.35)" }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white text-xs font-medium opacity-80">Skin here</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Hidden canvas for pixel sampling */}
+          <canvas ref={canvasRef} className="hidden" width={320} height={240} />
+
+          {/* Capture button */}
+          <div className="p-3 bg-surface-light flex gap-2">
+            <button
+              type="button"
+              onClick={closeCam}
+              className="btn-outline flex-1 text-sm py-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={sampleCameraColor}
+              className="btn-primary flex-1 text-sm py-2"
+            >
+              📸 Capture Skin Tone
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

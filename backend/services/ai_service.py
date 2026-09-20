@@ -904,7 +904,7 @@ def bob_proactive(trigger: str, user_context: dict | None = None) -> dict:
 
     TRIGGER_MESSAGES = {
         "landing": (
-            "Hey! I'm BOB 🎨 I know Indian fashion inside out — "
+            "Hey! I'm BOB  I know Indian fashion inside out — "
             "styles, fabrics, cuts, the works. Want me to suggest what suits you?"
         ),
         "style_picked": (
@@ -912,7 +912,7 @@ def bob_proactive(trigger: str, user_context: dict | None = None) -> dict:
             "Let's upload a reference image next."
         ),
         "image_enhanced": (
-            "Image looks clean! ✨ Now let's get your measurements so I can "
+            "Image looks clean!  Now let's get your measurements so I can "
             "generate a perfectly fitted 3D preview."
         ),
         "measurements_done": (
@@ -920,17 +920,17 @@ def bob_proactive(trigger: str, user_context: dict | None = None) -> dict:
             "Generating your 3D model now!"
         ),
         "mesh_ready": (
-            "Your 3D preview is ready! 🎉 Rotate it, check the fit. "
+            "Your 3D preview is ready!  Rotate it, check the fit. "
             "Want me to suggest a fabric for this style based on your skin tone?"
         ),
         "idle_30s": (
-            "Still here! 😄 Need help with this step? Just ask me anything."
+            "Still here!  Need help with this step? Just ask me anything."
         ),
     }
 
     reply = TRIGGER_MESSAGES.get(
         trigger,
-        "I'm BOB — ask me anything about styles, fabrics, or this app! 🧵"
+        "I'm BOB — ask me anything about styles, fabrics, or this app! "
     )
     return {"reply": reply}
 
@@ -973,13 +973,13 @@ def _build_recommendation_intro(ctx: UserContext, occasion: str) -> str:
     parts.append(f"a **{occasion}** occasion")
 
     intro_parts = " + ".join(parts)
-    return f"Based on {intro_parts}, here are my top picks for you 🎨"
+    return f"Based on {intro_parts}, here are my top picks for you "
 
 
 def _style_compliment(style: str | None) -> str:
     compliments = {
         "kurta": "Kurtas are incredibly versatile — great call.",
-        "ghagra": "Ghagra is bold and beautiful — you're going all out! 🔥",
+        "ghagra": "Ghagra is bold and beautiful — you're going all out! ",
         "blouse_saree": "A well-fitted blouse makes the whole saree — solid choice.",
         "anarkali": "Anarkali is timeless. You're going to look stunning.",
         "salwar_kameez": "Salwar Kameez is a classic — never goes wrong.",

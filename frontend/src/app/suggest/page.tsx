@@ -22,7 +22,7 @@ const OCCASIONS: { id: Occasion; label: string; desc: string }[] = [
 type FormStep = "tone" | "occasion" | "results";
 
 export default function SuggestPage() {
-  const { skinTone, measurements } = useStudioStore();
+  const { skinTone, measurements, setMeasurements } = useStudioStore();
   const initialStep: FormStep = skinTone ? "occasion" : "tone";
 
   const [isBookOpen, setIsBookOpen] = useState(false);
@@ -138,23 +138,69 @@ export default function SuggestPage() {
 
             <div className="diary-divider" />
 
-            {/* ── Step A: Skin Tone ── */}
+            {/* ── Step A: Skin Tone & Measurements ── */}
             {formStep === "tone" && (
               <>
                 <p className="diary-entry-title" style={{ fontSize: 20, marginBottom: 4 }}>
-                  First, their complexion...
+                  First, their complexion &amp; build...
                 </p>
-                <p className="diary-body" style={{ marginBottom: 16 }}>
-                  I must note their natural tone so I can select colours and fabrics
-                  that will complement them beautifully.
+                <p className="diary-body" style={{ marginBottom: 12 }}>
+                  I must note their natural tone and measurements so I can tailor the silhouette perfectly.
                 </p>
 
-                <div className="card p-6">
+                <div className="card p-5 mb-4">
                   <SkinToneSelector />
+                </div>
+
+                <div className="card p-5 mb-6">
+                  <p className="text-xs text-surface-dark/60 font-serif italic mb-3">Measurements (cm)</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-medium text-surface-dark/70 mb-1">Height</label>
+                      <input 
+                        type="number" 
+                        className="input-field text-sm p-2 h-9" 
+                        value={measurements?.height || ""} 
+                        onChange={(e) => setMeasurements({ ...measurements, height: Number(e.target.value) } as any)} 
+                        placeholder="165" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-surface-dark/70 mb-1">Waist</label>
+                      <input 
+                        type="number" 
+                        className="input-field text-sm p-2 h-9" 
+                        value={measurements?.waist || ""} 
+                        onChange={(e) => setMeasurements({ ...measurements, waist: Number(e.target.value) } as any)} 
+                        placeholder="75" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-surface-dark/70 mb-1">Chest/Bust</label>
+                      <input 
+                        type="number" 
+                        className="input-field text-sm p-2 h-9" 
+                        value={measurements?.chest || ""} 
+                        onChange={(e) => setMeasurements({ ...measurements, chest: Number(e.target.value) } as any)} 
+                        placeholder="90" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-surface-dark/70 mb-1">Hips</label>
+                      <input 
+                        type="number" 
+                        className="input-field text-sm p-2 h-9" 
+                        value={measurements?.hip || ""} 
+                        onChange={(e) => setMeasurements({ ...measurements, hip: Number(e.target.value) } as any)} 
+                        placeholder="95" 
+                      />
+                    </div>
+                  </div>
+                  
                   <button
                     onClick={() => setFormStep("occasion")}
-                    disabled={!currentTone}
-                    className="btn-primary w-full mt-6"
+                    disabled={!currentTone || !measurements?.height}
+                    className="btn-primary w-full mt-5 h-10"
                   >
                     Turn the page
                   </button>
@@ -259,7 +305,11 @@ export default function SuggestPage() {
                   {" "}occasion, I prescribe the following from my personal collection:
                 </p>
 
-                <RecommendationCard recommendations={results.recommendations} />
+                <RecommendationCard
+                  recommendations={results.recommendations}
+                  skinTone={currentTone}
+                  measurements={measurements}
+                />
 
                 <div className="flex flex-col sm:flex-row gap-3 mt-8">
                   <button

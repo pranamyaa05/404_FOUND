@@ -14,7 +14,7 @@ const nextConfig = {
   },
   // Proxy /api/* and /files/* calls to the FastAPI backend
   async rewrites() {
-    const backend = process.env.BACKEND_URL || "http://localhost:8000";
+    const backend = process.env.BACKEND_URL || "http://127.0.0.1:8000";
     return [
       {
         source: "/api/:path*",

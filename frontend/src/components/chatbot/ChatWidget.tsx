@@ -114,7 +114,7 @@ export default function ChatWidget() {
       chest_cm: ctx.measurements?.chest,
       waist_cm: ctx.measurements?.waist,
       hip_cm: ctx.measurements?.hip,
-      selected_style: ctx.selectedStyles.length > 0 ? ctx.selectedStyles.join(", ") : undefined,
+      selected_style: (ctx.selectedStyles && ctx.selectedStyles.length > 0) ? ctx.selectedStyles.join(", ").replace(/_/g, " ") : undefined,
       occasion: ctx.occasion ?? undefined,
       current_step: ctx.currentStep,
     };
@@ -398,11 +398,11 @@ function ContextRibbon() {
   const items: { icon: string; label: string }[] = [];
 
   if (skinTone)
-    items.push({ icon: "🎨", label: skinTone.displayName });
-  if (measurements)
-    items.push({ icon: "📏", label: `${measurements.height}cm` });
-  if (selectedStyles.length > 0)
-    items.push({ icon: "👗", label: selectedStyles.join(", ").replace("_", " ") });
+    items.push({ icon: "", label: skinTone.displayName });
+  if (measurements?.height)
+    items.push({ icon: "", label: `${measurements.height} cm` });
+  if (selectedStyles && selectedStyles.length > 0)
+    items.push({ icon: "", label: selectedStyles.join(", ").replace(/_/g, " ") });
 
   if (items.length === 0) return null;
 

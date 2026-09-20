@@ -235,7 +235,7 @@ export default function SkinToneSelector() {
             onClick={() => setShowCam(true)}
             className="text-xs text-primary font-medium hover:underline flex items-center gap-1 ml-2 whitespace-nowrap"
           >
-            📷 Auto-detect from Camera
+             Auto-detect from Camera
           </button>
         ) : (
           <button
@@ -243,7 +243,7 @@ export default function SkinToneSelector() {
             onClick={closeCam}
             className="text-xs text-red-500 font-medium hover:underline flex items-center gap-1 ml-2 whitespace-nowrap"
           >
-            ✕ Close Camera
+             Close Camera
           </button>
         )}
       </div>
@@ -252,7 +252,7 @@ export default function SkinToneSelector() {
       {showCam && (
         <div className="rounded-xl overflow-hidden border border-surface-dark/15 shadow-md mb-3">
           <div className="bg-surface-dark/5 px-3 py-2 text-xs text-surface-dark/60 font-medium">
-            📷 Position your face or bare arm so the circle aligns with your skin, then click <strong>Capture</strong>.
+             Position your face or bare arm so the circle aligns with your skin, then click <strong>Capture</strong>.
           </div>
 
           {/* Live video feed */}
@@ -296,7 +296,7 @@ export default function SkinToneSelector() {
               onClick={sampleCameraColor}
               className="btn-primary flex-1 text-sm py-2"
             >
-              📸 Capture Skin Tone
+               Capture Skin Tone
             </button>
           </div>
         </div>

@@ -83,27 +83,27 @@ export default function DieLine({ onBack }: Props) {
 
                 <div className="space-y-3.5 text-xs">
                   <div className="flex justify-between items-center bg-white/60 p-2.5 rounded-lg border border-surface-dark/5">
-                    <span className="font-medium text-surface-dark/80">👔 Collar / Neckline</span>
+                    <span className="font-medium text-surface-dark/80"> Collar / Neckline</span>
                     <span className="font-mono font-bold text-primary">{collarCm} cm</span>
                   </div>
 
                   <div className="flex justify-between items-center bg-white/60 p-2.5 rounded-lg border border-surface-dark/5">
-                    <span className="font-medium text-surface-dark/80">👕 Front/Back Bust Panel</span>
+                    <span className="font-medium text-surface-dark/80"> Front/Back Bust Panel</span>
                     <span className="font-mono font-bold text-primary">{bustWidthCm} cm</span>
                   </div>
 
                   <div className="flex justify-between items-center bg-white/60 p-2.5 rounded-lg border border-surface-dark/5">
-                    <span className="font-medium text-surface-dark/80">👖 Waist Panel Width</span>
+                    <span className="font-medium text-surface-dark/80"> Waist Panel Width</span>
                     <span className="font-mono font-bold text-primary">{waistWidthCm} cm</span>
                   </div>
 
                   <div className="flex justify-between items-center bg-white/60 p-2.5 rounded-lg border border-surface-dark/5">
-                    <span className="font-medium text-surface-dark/80">🧥 Sleeve Length</span>
+                    <span className="font-medium text-surface-dark/80"> Sleeve Length</span>
                     <span className="font-mono font-bold text-primary">{sleeveCm} cm</span>
                   </div>
 
                   <div className="flex justify-between items-center bg-white/60 p-2.5 rounded-lg border border-surface-dark/5">
-                    <span className="font-medium text-surface-dark/80">👗 Total Garment Length</span>
+                    <span className="font-medium text-surface-dark/80"> Total Garment Length</span>
                     <span className="font-mono font-bold text-primary">{garmentLengthCm} cm</span>
                   </div>
                 </div>
@@ -124,7 +124,7 @@ export default function DieLine({ onBack }: Props) {
               "repeating-linear-gradient(0deg, rgba(50,42,33,.07) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, rgba(50,42,33,.07) 0 1px, transparent 1px 24px)",
           }}
         >
-          <div className="text-5xl mb-4">✂️</div>
+          <div className="text-5xl mb-4">️</div>
           <p className="text-surface-dark/60 font-medium">
             Pattern and component specs will appear here once 3D mesh is generated
           </p>

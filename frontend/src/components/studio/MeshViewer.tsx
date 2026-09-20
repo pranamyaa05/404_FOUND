@@ -357,7 +357,7 @@ export default function MeshViewer({ onNext, onBack }: Props) {
           
           {/* Avatar Base Layer (Static) */}
           <div className="flex items-center gap-2 p-2 rounded-lg bg-white/40 mb-2 border border-surface-dark/5 opacity-70 grayscale">
-             <div className="w-6 h-6 rounded bg-surface-dark/10 flex items-center justify-center text-xs">👤</div>
+             <div className="w-6 h-6 rounded bg-surface-dark/10 flex items-center justify-center text-xs"></div>
              <div className="text-xs font-medium text-surface-dark">Avatar</div>
           </div>
 
@@ -374,7 +374,7 @@ export default function MeshViewer({ onNext, onBack }: Props) {
             >
               <div className="flex items-center gap-2">
                  <div className="w-6 h-6 rounded bg-surface-dark/5 flex items-center justify-center text-xs">
-                   {item.drapedUrl ? "✨" : "👕"}
+                   {item.drapedUrl ? "" : ""}
                  </div>
                  <div className="flex flex-col">
                    <div className="text-xs font-medium text-surface-dark leading-tight">{item.style}</div>
@@ -385,7 +385,7 @@ export default function MeshViewer({ onNext, onBack }: Props) {
                 onClick={(e) => { e.stopPropagation(); removeWardrobeItem(item.id); }}
                 className="text-surface-dark/30 hover:text-red-500 w-5 h-5 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors"
                 title="Remove layer"
-              >✕</button>
+              ></button>
             </div>
           ))}
 

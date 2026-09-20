@@ -155,7 +155,7 @@ export default function StylePicker({ onNext }: { onNext: () => void }) {
                   className={`stu-opt ${isSelected ? "selected" : ""}`}
                   onClick={() => toggleSelectedStyle(s.name)}
                 >
-                  <span className="stu-check">✓</span>
+                  <span className="stu-check"></span>
                   <div className="stu-chip">
                     <GarmentSVG type={s.type} color={s.color} />
                   </div>

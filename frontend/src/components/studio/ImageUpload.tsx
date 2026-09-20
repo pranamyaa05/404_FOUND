@@ -24,7 +24,7 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: "92vw", maxHeight: "92vh", objectFit: "contain", borderRadius: 12 }}
       />
-      <button onClick={onClose} className="absolute top-5 right-6 text-white text-3xl font-bold">✕</button>
+      <button onClick={onClose} className="absolute top-5 right-6 text-white text-3xl font-bold"></button>
     </div>
   );
 }
@@ -38,7 +38,7 @@ function ImageWithFullscreen({ src, alt, className }: { src: string; alt: string
       <button
         onClick={() => setLightboxOpen(true)}
         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-black/60 text-white rounded px-2 py-1 text-xs"
-      >⛶</button>
+      ></button>
       {lightboxOpen && <Lightbox src={src} alt={alt} onClose={() => setLightboxOpen(false)} />}
     </div>
   );

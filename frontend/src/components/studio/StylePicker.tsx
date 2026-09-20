@@ -119,12 +119,12 @@ function GarmentSVG({ type, color }: { type: string, color: string }) {
 
 export default function StylePicker({ onNext }: { onNext: () => void }) {
   const [activeCat, setActiveCat] = useState("all");
-  const { selectedStyle, setSelectedStyle } = useStudioStore();
+  const { selectedStyles, toggleSelectedStyle } = useStudioStore();
   
   const filteredStyles = styles.filter(s => activeCat === "all" || s.cat === activeCat);
 
   const handleContinue = () => {
-    if (selectedStyle) onNext();
+    if (selectedStyles.length > 0) onNext();
   };
 
   return (
@@ -148,12 +148,12 @@ export default function StylePicker({ onNext }: { onNext: () => void }) {
           
           <div className="stu-style-grid">
             {filteredStyles.map(s => {
-              const isSelected = selectedStyle === s.name;
+              const isSelected = selectedStyles.includes(s.name);
               return (
                 <button
                   key={s.name}
                   className={`stu-opt ${isSelected ? "selected" : ""}`}
-                  onClick={() => setSelectedStyle(s.name)}
+                  onClick={() => toggleSelectedStyle(s.name)}
                 >
                   <span className="stu-check">✓</span>
                   <div className="stu-chip">
@@ -168,12 +168,12 @@ export default function StylePicker({ onNext }: { onNext: () => void }) {
 
           <div className="stu-footer-row">
             <div className="stu-footer-hint">
-              {selectedStyle ? `${selectedStyle} selected — ready for the next step` : "Select a style to continue"}
+              {selectedStyles.length > 0 ? `${selectedStyles.length} style(s) selected — ready for the next step` : "Select styles to continue"}
             </div>
             <button
-              className={`stu-continue-btn ${selectedStyle ? "ready" : ""}`}
+              className={`stu-continue-btn ${selectedStyles.length > 0 ? "ready" : ""}`}
               onClick={handleContinue}
-              disabled={!selectedStyle}
+              disabled={selectedStyles.length === 0}
             >
               Continue →
             </button>

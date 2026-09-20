@@ -28,7 +28,12 @@ logger = logging.getLogger(__name__)
 
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BLENDER_SCRIPTS_DIR = os.path.abspath(os.path.join(_BACKEND_DIR, "..", "blender-scripts"))
-SCRIPT_PATH = os.path.join(BLENDER_SCRIPTS_DIR, "blender_pipeline.py")
+# Prefer the new semantic panel dieline script; fall back to older versions
+SCRIPT_PATH = os.path.join(BLENDER_SCRIPTS_DIR, "dieline_garment_panels.py")
+if not os.path.exists(SCRIPT_PATH):
+    SCRIPT_PATH = os.path.join(BLENDER_SCRIPTS_DIR, "blender_pipeline_structured.py")
+if not os.path.exists(SCRIPT_PATH):
+    SCRIPT_PATH = os.path.join(BLENDER_SCRIPTS_DIR, "blender_pipeline.py")
 TEMP_DIR = os.path.join(_BACKEND_DIR, "temp")
 
 # Patch httpx to prevent timeouts on long Gradio operations
@@ -205,6 +210,10 @@ def generate(measurements: dict | None, style: str, image_url: str | None = None
         env = os.environ.copy()
         env["MORPHO_UPLOADS"] = uploads_dir
         env["MORPHO_OUTPUTS"] = outputs_dir
+        # Pass body measurements and garment type to dieline script
+        if measurements:
+            env["GARMENT_MEASUREMENTS"] = json.dumps(measurements)
+        env["GARMENT_TYPE"] = (style or "dress").lower().strip()
         cmd = [blender_exe, "--background", "--python", SCRIPT_PATH]
         logger.info("[mesh] Executing: %s", " ".join(cmd))
         try:
@@ -238,96 +247,11 @@ def generate(measurements: dict | None, style: str, image_url: str | None = None
         svgs = glob.glob(os.path.join(outputs_dir, "*.svg"))
         if svgs:
             dieline_svg = svgs[0]
-
-    # Inject mesh metrics into the SVG if available
-    if os.path.exists(dieline_svg):
-        metrics_path = os.path.join(outputs_dir, 'mesh_metrics.json')
-        if os.path.exists(metrics_path):
-            try:
-                import json
-                with open(metrics_path, 'r') as mf:
-                    metrics = json.load(mf)
-                    
-                w = metrics.get('bounding_box', {}).get('width_m', 0.0)
-                h = metrics.get('bounding_box', {}).get('height_m', 0.0)
-                d = metrics.get('bounding_box', {}).get('depth_m', 0.0)
-                
-                import re
-                with open(dieline_svg, 'r', encoding='utf-8') as f:
-                    svg_content = f.read()
-                    
-                # 1) Find the opening <svg> tag to parse and expand bounds
-                svg_tag_match = re.search(r'<svg[^>]*>', svg_content)
-                box_x, box_y = 10, 30
-                scale = 1.0
-                
-                if svg_tag_match:
-                    svg_tag = svg_tag_match.group(0)
-                    w_match = re.search(r'\bwidth=[\'"]([0-9\.]+)([^*\'"]*)[\'"]', svg_tag)
-                    h_match = re.search(r'\bheight=[\'"]([0-9\.]+)([^*\'"]*)[\'"]', svg_tag)
-                    vb_match = re.search(r'viewBox=[\'"]([^\'"]+)[\'"]', svg_tag)
-
-                    
-                    try:
-                        vb_w, vb_h = 1000.0, 1000.0
-                        min_x, min_y = 0.0, 0.0
-                        
-                        if vb_match:
-                            vb = list(map(float, vb_match.group(1).split()))
-                            min_x, min_y, vb_w, vb_h = vb
-                        elif w_match and h_match:
-                            vb_w = float(w_match.group(1))
-                            vb_h = float(h_match.group(1))
-                            
-                        # Add 40% more canvas space to the right side
-                        extra_w = vb_w * 0.40
-                        new_vb_w = vb_w + extra_w
-                        
-                        new_svg_tag = svg_tag
-                        new_vb_str = f'viewBox="{min_x} {min_y} {new_vb_w} {vb_h}"'
-                        
-                        if vb_match:
-                            new_svg_tag = new_svg_tag.replace(vb_match.group(0), new_vb_str)
-                        else:
-                            new_svg_tag = new_svg_tag[:-1] + f' {new_vb_str}>'
-                            
-                        if w_match:
-                            old_w_val = float(w_match.group(1))
-                            unit = w_match.group(2)
-                            new_w_val = old_w_val * (new_vb_w / vb_w)
-                            new_svg_tag = new_svg_tag.replace(w_match.group(0), f'width="{new_w_val:.5f}{unit}"')
-                            
-                        svg_content = svg_content.replace(svg_tag, new_svg_tag)
-                        
-                        # 2) Calculate box position in the new blank space
-                        box_w = 340
-                        scale = (extra_w * 0.75) / box_w
-                        box_x = min_x + vb_w + (extra_w * 0.125)
-                        box_y = min_y + (vb_h * 0.1)
-                    except Exception as e:
-                        logger.error(f"Failed to expand SVG canvas: {e}")
-                
-                # Append a <g> tag before the closing </svg> tag
-                stamp = (
-                    f'<g transform="translate({box_x}, {box_y}) scale({scale})">\n'
-                    f'  <rect x="0" y="0" width="340" height="105" fill="#f0f2f5" stroke="#333" stroke-width="2" rx="8" ry="8"/>\n'
-                    f'  <text x="15" y="32" font-family="monospace" font-size="16" font-weight="bold" fill="#111" style="text-anchor:start;">Mesh Bounds (meters)</text>\n'
-                    f'  <text x="15" y="62" font-family="monospace" font-size="14" fill="#333" style="text-anchor:start;">Width: {w} m</text>\n'
-                    f'  <text x="15" y="87" font-family="monospace" font-size="14" fill="#333" style="text-anchor:start;">Height: {h} m, Depth: {d} m</text>\n'
-                    f'</g>\n</svg>'
-                )
-                svg_content = svg_content.replace('</svg>', stamp)
-                
-                with open(dieline_svg, 'w', encoding='utf-8') as f:
-                    f.write(svg_content)
-                    
-            except Exception as e:
-                logger.error(f"Failed to inject metrics into SVG: {e}")
-    else:
-        logger.warning("[mesh] SVG generation failed, using dummy SVG")
-        dieline_svg = os.path.join(outputs_dir, "dieline_dummy.svg")
-        with open(dieline_svg, 'w') as f:
-            f.write('<svg width="200" height="100"><text x="10" y="50">SVG Generation Failed</text></svg>')
+        else:
+            logger.warning("[mesh] SVG generation failed, using dummy SVG")
+            dieline_svg = os.path.join(outputs_dir, "dieline_dummy.svg")
+            with open(dieline_svg, 'w') as f:
+                f.write('<svg width="200" height="100"><text x="10" y="50">SVG Generation Failed</text></svg>')
 
     # 4. Copy to temp dir to serve
     # Naming as .glb works with useGLTF in frontend

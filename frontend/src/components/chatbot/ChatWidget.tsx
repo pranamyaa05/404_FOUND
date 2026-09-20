@@ -114,7 +114,7 @@ export default function ChatWidget() {
       chest_cm: ctx.measurements?.chest,
       waist_cm: ctx.measurements?.waist,
       hip_cm: ctx.measurements?.hip,
-      selected_style: ctx.selectedStyle ?? undefined,
+      selected_style: ctx.selectedStyles.length > 0 ? ctx.selectedStyles.join(", ") : undefined,
       occasion: ctx.occasion ?? undefined,
       current_step: ctx.currentStep,
     };
@@ -394,15 +394,15 @@ export default function ChatWidget() {
 // Shows what BOB already knows so user feels understood, not interrogated.
 
 function ContextRibbon() {
-  const { skinTone, measurements, selectedStyle } = useStudioStore();
+  const { skinTone, measurements, selectedStyles } = useStudioStore();
   const items: { icon: string; label: string }[] = [];
 
   if (skinTone)
-    items.push({ icon: "", label: skinTone.displayName });
-  if (measurements?.height)
-    items.push({ icon: "", label: `${measurements.height} cm` });
-  if (selectedStyle)
-    items.push({ icon: "", label: selectedStyle.replace("_", " ") });
+    items.push({ icon: "🎨", label: skinTone.displayName });
+  if (measurements)
+    items.push({ icon: "📏", label: `${measurements.height}cm` });
+  if (selectedStyles.length > 0)
+    items.push({ icon: "👗", label: selectedStyles.join(", ").replace("_", " ") });
 
   if (items.length === 0) return null;
 

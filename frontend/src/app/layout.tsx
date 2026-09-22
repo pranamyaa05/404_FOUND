@@ -4,7 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import ChatWidget from "@/components/chatbot/ChatWidget";
 
 export const metadata: Metadata = {
-  title: "StitchSmart — AI-Powered Tailoring Assistant",
+  title: "GarmentForge - AI-Powered Tailoring Assistant",
   description:
     "Upload your dress design, set your measurements, and get a 3D preview with tailor-ready patterns.",
 };

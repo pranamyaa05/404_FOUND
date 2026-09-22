@@ -2,6 +2,8 @@
 
 import { useStudioStore } from "@/store/studioStore";
 
+import { useState, useEffect } from "react";
+
 interface Props {
   onBack: () => void;
 }
@@ -12,15 +14,44 @@ export default function DieLine({ onBack }: Props) {
   const dieLineUrl = activeItem?.dieLineUrl;
   const activeStyle = activeItem?.style || "Garment";
 
+  const [showWireframe, setShowWireframe] = useState(true);
+  const [processedSvgUrl, setProcessedSvgUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!dieLineUrl) {
+      setProcessedSvgUrl(null);
+      return;
+    }
+    
+    fetch(dieLineUrl)
+      .then(res => res.text())
+      .then(svgText => {
+        // Hide outline and seam lines if wireframe is off
+        const styleBlock = `<style>
+          ${!showWireframe ? '.outline { display: none !important; } .seam { display: none !important; }' : ''}
+        </style>`;
+        
+        // Insert the style block inside the SVG
+        const modifiedSvg = svgText.replace(/(<svg[^>]*>)/i, `$1${styleBlock}`);
+        
+        const blob = new Blob([modifiedSvg], { type: 'image/svg+xml' });
+        const objUrl = URL.createObjectURL(blob);
+        setProcessedSvgUrl(objUrl);
+
+        return () => URL.revokeObjectURL(objUrl);
+      })
+      .catch(err => {
+        console.error("Error processing SVG:", err);
+        setProcessedSvgUrl(dieLineUrl);
+      });
+  }, [dieLineUrl, showWireframe]);
+
   // Derive component metrics in cm from measurements or store defaults
-  const m = measurements || { height: 165, chest: 90, waist: 75, hip: 95, shoulder: 40, sleeveLength: 58 };
+  const m = measurements || { height: 165, chest: 90, waist: 75, hip: 95, shoulder: 40 };
   const collarCm = (m.chest * 0.42).toFixed(1);
-  const sleeveCm = m.sleeveLength.toFixed(1);
   const bustWidthCm = (m.chest / 2 + 2).toFixed(1);
   const waistWidthCm = (m.waist / 2 + 2).toFixed(1);
   const garmentLengthCm = (m.height * 0.65).toFixed(1);
-
-
 
   return (
     <div className="card">
@@ -31,12 +62,23 @@ export default function DieLine({ onBack }: Props) {
         2D cutout patterns for the currently selected layer. Scale 1:1.
       </p>
 
-      {dieLineUrl ? (
+      {processedSvgUrl ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
           {/* Main SVG Pattern Cutting Table */}
           <div className="lg:col-span-8 flex flex-col">
-            <div className="text-xs font-serif italic text-surface-dark/70 mb-2">
-              ARAP 2D Panel Cutout Pattern (Scale 1:1)
+            <div className="flex justify-between items-end mb-2">
+              <div className="text-xs font-serif italic text-surface-dark/70">
+                ARAP 2D Panel Cutout Pattern (Scale 1:1)
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-surface-dark/80 bg-surface-dark/5 hover:bg-surface-dark/10 px-2 py-1 rounded transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={showWireframe} 
+                  onChange={(e) => setShowWireframe(e.target.checked)} 
+                  className="accent-primary"
+                />
+                Show Triangle Mesh
+              </label>
             </div>
             <div
               className="w-full flex-1 rounded-xl p-4 overflow-auto max-h-[520px] min-h-[400px] border border-surface-dark/10 shadow-inner"
@@ -47,7 +89,7 @@ export default function DieLine({ onBack }: Props) {
               }}
             >
               <object
-                data={dieLineUrl}
+                data={processedSvgUrl}
                 type="image/svg+xml"
                 className="w-full min-h-[380px]"
                 aria-label="2D die-line pattern"
@@ -60,8 +102,8 @@ export default function DieLine({ onBack }: Props) {
 
             <div className="mt-4">
               <a
-                href={dieLineUrl}
-                download="stitchsmart-pattern.svg"
+                href={processedSvgUrl}
+                download="garmentforge-pattern.svg"
                 className="btn-primary text-center block text-sm py-2.5"
               >
                 Download Pattern (SVG)
@@ -97,10 +139,6 @@ export default function DieLine({ onBack }: Props) {
                     <span className="font-mono font-bold text-primary">{waistWidthCm} cm</span>
                   </div>
 
-                  <div className="flex justify-between items-center bg-white/60 p-2.5 rounded-lg border border-surface-dark/5">
-                    <span className="font-medium text-surface-dark/80"> Sleeve Length</span>
-                    <span className="font-mono font-bold text-primary">{sleeveCm} cm</span>
-                  </div>
 
                   <div className="flex justify-between items-center bg-white/60 p-2.5 rounded-lg border border-surface-dark/5">
                     <span className="font-medium text-surface-dark/80"> Total Garment Length</span>

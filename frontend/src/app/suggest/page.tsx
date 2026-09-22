@@ -79,7 +79,7 @@ export default function SuggestPage() {
             </div>
             <div className="diary-cover-rule" />
             <div className="diary-cover-subtitle">
-              BOB &middot; Est. StitchSmart
+              BOB &middot; Est. GarmentForge
             </div>
 
             {/* Avatar as a "portrait" on the cover */}

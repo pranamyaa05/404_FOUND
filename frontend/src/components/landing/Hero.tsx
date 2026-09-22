@@ -132,7 +132,10 @@ export default function Hero() {
 
       <section className="hero">
         <div className="hero-inner">
-          <p className="eyebrow">StitchSmart</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+            <img src="/garmentforge.png" alt="GarmentForge Logo" style={{ width: '72px', height: '72px', objectFit: 'contain' }} />
+          </div>
+          <p className="eyebrow">GarmentForge</p>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <div className="craft-detail spool-detail" aria-hidden="true" style={{ top: '-10px', left: '-55px' }}>
               <span className="spool"><span className="thread"></span></span>

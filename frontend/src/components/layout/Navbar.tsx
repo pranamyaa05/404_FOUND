@@ -42,9 +42,9 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group hover:opacity-80 transition-opacity">
-          <span className="text-2xl drop-shadow-sm">✨</span>
+          <img src="/garmentforge.png" alt="GarmentForge Logo" className="w-8 h-8 object-contain" />
           <span className="text-surface-dark font-serif font-semibold text-2xl tracking-tight">
-            Stitch<span className="text-primary font-normal italic">Smart</span>
+            Garment<span className="text-primary font-normal italic">Forge</span>
           </span>
         </Link>
 

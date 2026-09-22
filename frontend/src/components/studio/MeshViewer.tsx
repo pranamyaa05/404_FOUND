@@ -170,17 +170,17 @@ function Model({
     const size = box.getSize(new THREE.Vector3());
     const objCenter = box.getCenter(new THREE.Vector3());
 
-    const avatarScale = scale > 0 ? scale : (2 / Math.max(size.x, size.y, size.z));
+    const baseScale = 2 / Math.max(size.x, size.y, size.z);
     const scaleVec = new THREE.Vector3(
-      avatarScale * manualScaleX,
-      avatarScale * manualScaleY,
-      avatarScale * manualScaleZ
+      baseScale * manualScaleX,
+      baseScale * manualScaleY,
+      baseScale * manualScaleZ
     );
 
     group.scale.copy(scaleVec);
     group.position.sub(objCenter.clone().multiply(scaleVec));
 
-    group.position.y += (scale > 0 ? offsetY : (size.y * scaleVec.y) / 2) + manualOffsetY;
+    group.position.y += (size.y * scaleVec.y) / 2 + manualOffsetY;
     group.position.x += manualOffsetX;
     group.position.z += manualOffsetZ;
     group.rotation.set(manualRotateX, manualRotateY, manualRotateZ);
@@ -231,9 +231,33 @@ export default function MeshViewer({ onNext, onBack }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const activeItem = wardrobe.find(w => w.id === activeWardrobeId);
+  const [history, setHistory] = useState<GarmentFit[]>([]);
 
+  useEffect(() => {
+    // Clear history when active layer changes
+    setHistory([]);
+  }, [activeWardrobeId]);
 
+  const handleSliderStart = () => {
+    if (activeItem) {
+      setHistory(prev => [...prev, { ...activeItem.fit }]);
+    }
+  };
 
+  const handleUndo = () => {
+    if (history.length > 0) {
+      const last = history[history.length - 1];
+      setHistory(prev => prev.slice(0, -1));
+      updateActiveGarmentFit(last);
+    }
+  };
+
+  const handleReset = () => {
+    if (activeItem) {
+      setHistory(prev => [...prev, { ...activeItem.fit }]);
+    }
+    updateActiveGarmentFit({ scaleX: 0.45, scaleY: 0.45, scaleZ: 0.45, offsetX: 0, offsetY: 0, offsetZ: 0, rotateX: 0, rotateY: 0, rotateZ: 0 });
+  };
   const handleGenerateMesh = async (imageId: string, style: string, enhancedUrl: string) => {
     setIsGenerating(imageId);
     setError(null);
@@ -306,43 +330,62 @@ export default function MeshViewer({ onNext, onBack }: Props) {
             <div className="text-sm font-medium text-surface-dark">
               Adjusting Layer: <span className="text-primary font-bold">{activeItem.style}</span>
             </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={handleUndo} 
+                disabled={history.length === 0}
+                className="bg-surface-dark/5 hover:bg-surface-dark/10 text-surface-dark text-xs font-medium px-2 py-1 rounded transition-colors disabled:opacity-40"
+              >
+                ↶ Undo
+              </button>
+              <button 
+                onClick={handleReset} 
+                className="bg-surface-dark/5 hover:bg-red-50 hover:text-red-600 text-surface-dark text-xs font-medium px-2 py-1 rounded transition-colors"
+              >
+                Reset
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
+              <label className="block text-xs text-surface-dark/70 mb-1 font-bold">Scale Uniform ({((activeItem.fit.scaleX + activeItem.fit.scaleY + activeItem.fit.scaleZ) / 3).toFixed(2)}x)</label>
+              <input type="range" min="0.2" max="2.0" step="0.01" value={(activeItem.fit.scaleX + activeItem.fit.scaleY + activeItem.fit.scaleZ) / 3} onPointerDown={handleSliderStart} onChange={(e) => { const v = parseFloat(e.target.value); updateActiveGarmentFit({ scaleX: v, scaleY: v, scaleZ: v })}} className="w-full accent-primary" />
+            </div>
+            <div>
               <label className="block text-xs text-surface-dark/70 mb-1">Scale X (Width) ({activeItem.fit.scaleX.toFixed(2)}x)</label>
-              <input type="range" min="0.2" max="2.0" step="0.01" value={activeItem.fit.scaleX} onChange={(e) => updateActiveGarmentFit({ scaleX: parseFloat(e.target.value)})} className="w-full accent-primary" />
+              <input type="range" min="0.2" max="2.0" step="0.01" value={activeItem.fit.scaleX} onPointerDown={handleSliderStart} onChange={(e) => updateActiveGarmentFit({ scaleX: parseFloat(e.target.value)})} className="w-full accent-primary" />
             </div>
             <div>
               <label className="block text-xs text-surface-dark/70 mb-1">Scale Y (Height) ({activeItem.fit.scaleY.toFixed(2)}x)</label>
-              <input type="range" min="0.2" max="2.0" step="0.01" value={activeItem.fit.scaleY} onChange={(e) => updateActiveGarmentFit({ scaleY: parseFloat(e.target.value)})} className="w-full accent-primary" />
+              <input type="range" min="0.2" max="2.0" step="0.01" value={activeItem.fit.scaleY} onPointerDown={handleSliderStart} onChange={(e) => updateActiveGarmentFit({ scaleY: parseFloat(e.target.value)})} className="w-full accent-primary" />
             </div>
             <div>
               <label className="block text-xs text-surface-dark/70 mb-1">Scale Z (Depth) ({activeItem.fit.scaleZ.toFixed(2)}x)</label>
-              <input type="range" min="0.2" max="2.0" step="0.01" value={activeItem.fit.scaleZ} onChange={(e) => updateActiveGarmentFit({ scaleZ: parseFloat(e.target.value)})} className="w-full accent-primary" />
+              <input type="range" min="0.2" max="2.0" step="0.01" value={activeItem.fit.scaleZ} onPointerDown={handleSliderStart} onChange={(e) => updateActiveGarmentFit({ scaleZ: parseFloat(e.target.value)})} className="w-full accent-primary" />
             </div>
             <div>
               <label className="block text-xs text-surface-dark/70 mb-1">Offset X (Left/Right) ({activeItem.fit.offsetX.toFixed(2)})</label>
-              <input type="range" min="-1.5" max="1.5" step="0.01" value={activeItem.fit.offsetX} onChange={(e) => updateActiveGarmentFit({ offsetX: parseFloat(e.target.value)})} className="w-full accent-primary" />
+              <input type="range" min="-1.5" max="1.5" step="0.01" value={activeItem.fit.offsetX} onPointerDown={handleSliderStart} onChange={(e) => updateActiveGarmentFit({ offsetX: parseFloat(e.target.value)})} className="w-full accent-primary" />
             </div>
             <div>
               <label className="block text-xs text-surface-dark/70 mb-1">Offset Y (Up/Down) ({activeItem.fit.offsetY.toFixed(2)})</label>
-              <input type="range" min="-1.5" max="1.5" step="0.01" value={activeItem.fit.offsetY} onChange={(e) => updateActiveGarmentFit({ offsetY: parseFloat(e.target.value)})} className="w-full accent-primary" />
+              <input type="range" min="-1.5" max="1.5" step="0.01" value={activeItem.fit.offsetY} onPointerDown={handleSliderStart} onChange={(e) => updateActiveGarmentFit({ offsetY: parseFloat(e.target.value)})} className="w-full accent-primary" />
             </div>
             <div>
               <label className="block text-xs text-surface-dark/70 mb-1">Offset Z (Forward/Back) ({activeItem.fit.offsetZ.toFixed(2)})</label>
-              <input type="range" min="-1.5" max="1.5" step="0.01" value={activeItem.fit.offsetZ} onChange={(e) => updateActiveGarmentFit({ offsetZ: parseFloat(e.target.value)})} className="w-full accent-primary" />
+              <input type="range" min="-1.5" max="1.5" step="0.01" value={activeItem.fit.offsetZ} onPointerDown={handleSliderStart} onChange={(e) => updateActiveGarmentFit({ offsetZ: parseFloat(e.target.value)})} className="w-full accent-primary" />
             </div>
             <div>
               <label className="block text-xs text-surface-dark/70 mb-1">Rotate X (Pitch) ({(activeItem.fit.rotateX * (180/Math.PI)).toFixed(0)}°)</label>
-              <input type="range" min="-3.14" max="3.14" step="0.01" value={activeItem.fit.rotateX} onChange={(e) => updateActiveGarmentFit({ rotateX: parseFloat(e.target.value)})} className="w-full accent-primary" />
+              <input type="range" min="-3.14" max="3.14" step="0.01" value={activeItem.fit.rotateX} onPointerDown={handleSliderStart} onChange={(e) => updateActiveGarmentFit({ rotateX: parseFloat(e.target.value)})} className="w-full accent-primary" />
             </div>
             <div>
               <label className="block text-xs text-surface-dark/70 mb-1">Rotate Y (Yaw) ({(activeItem.fit.rotateY * (180/Math.PI)).toFixed(0)}°)</label>
-              <input type="range" min="-3.14" max="3.14" step="0.01" value={activeItem.fit.rotateY} onChange={(e) => updateActiveGarmentFit({ rotateY: parseFloat(e.target.value)})} className="w-full accent-primary" />
+              <input type="range" min="-3.14" max="3.14" step="0.01" value={activeItem.fit.rotateY} onPointerDown={handleSliderStart} onChange={(e) => updateActiveGarmentFit({ rotateY: parseFloat(e.target.value)})} className="w-full accent-primary" />
             </div>
             <div>
               <label className="block text-xs text-surface-dark/70 mb-1">Rotate Z (Roll) ({(activeItem.fit.rotateZ * (180/Math.PI)).toFixed(0)}°)</label>
-              <input type="range" min="-3.14" max="3.14" step="0.01" value={activeItem.fit.rotateZ} onChange={(e) => updateActiveGarmentFit({ rotateZ: parseFloat(e.target.value)})} className="w-full accent-primary" />
+              <input type="range" min="-3.14" max="3.14" step="0.01" value={activeItem.fit.rotateZ} onPointerDown={handleSliderStart} onChange={(e) => updateActiveGarmentFit({ rotateZ: parseFloat(e.target.value)})} className="w-full accent-primary" />
             </div>
           </div>
         </div>

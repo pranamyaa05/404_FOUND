@@ -95,14 +95,24 @@ export default function ImageUpload({ onNext, onBack }: Props) {
         Upload a photo for each style you selected. We'll remove backgrounds automatically.
       </p>
 
-      {selectedStyles.map(styleName => {
-        const item = garmentGallery.find(g => g.style === styleName);
-        const isEnhancing = enhancingMap[styleName];
+      {selectedStyles.map((styleName, idx) => {
+        const item = garmentGallery.find((g) => g.style === styleName);
+        const isEnhancing = enhancingMap[styleName] || false;
         const error = errorMap[styleName];
+        const isAccessory = styleName.startsWith("Accessory");
 
         return (
-          <div key={styleName} className="mb-8 border border-surface-dark/10 p-4 rounded-xl bg-surface-light">
-            <h3 className="font-medium text-surface-dark mb-3 text-lg">{styleName}</h3>
+          <div key={idx} className="bg-surface-light border border-surface-dark/10 rounded-2xl p-6 mb-6 shadow-sm relative">
+            {isAccessory && (
+              <button 
+                onClick={() => useStudioStore.getState().toggleSelectedStyle(styleName)}
+                className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center text-surface-dark/40 hover:text-red-500 bg-black/5 hover:bg-red-50 rounded-full transition-colors"
+                title="Remove accessory"
+              >
+                ✕
+              </button>
+            )}
+            <h3 className="font-serif italic text-xl text-surface-dark mb-4">{styleName}</h3>
             
             {!item ? (
               <label className="relative block border border-dashed border-surface-dark/30 rounded-xl p-8 text-center cursor-pointer hover:border-primary/60 bg-surface-paper/70">

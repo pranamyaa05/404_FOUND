@@ -21,7 +21,6 @@ export interface MeasurementValues {
   waist: number;
   hip: number;
   shoulder: number;
-  sleeveLength: number;
 }
 
 function AvatarModel({ url, skinHex }: { url: string; skinHex: string }) {
@@ -86,7 +85,6 @@ export default function MeasurementForm({ onNext, onBack }: Props) {
       waist: 75,
       hip: 95,
       shoulder: 40,
-      sleeveLength: 58,
     },
   });
 
@@ -140,7 +138,6 @@ export default function MeasurementForm({ onNext, onBack }: Props) {
     { name: "waist", label: "Waist (cm)", min: 40, max: 150 },
     { name: "hip", label: "Hip (cm)", min: 50, max: 170 },
     { name: "shoulder", label: "Shoulder Width (cm)", min: 25, max: 70 },
-    { name: "sleeveLength", label: "Sleeve Length (cm)", min: 10, max: 80 },
   ];
 
   return (

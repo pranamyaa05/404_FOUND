@@ -69,7 +69,7 @@ const WELCOME_MESSAGE: QuickReplyMessage = {
   id: "welcome",
   role: "bob",
   type: "quick_replies",
-  text: "Welcome to StitchSmart. I'm BOB -- your personal fashion consultant.\nI specialise in Indian ethnic wear -- styles, fabrics, colours, measurements, and tailoring.\n\nHow can I help you today?",
+  text: "Welcome to GarmentForge. I'm BOB -- your personal fashion consultant.\nI specialise in Indian ethnic wear -- styles, fabrics, colours, measurements, and tailoring.\n\nHow can I help you today?",
   replies: INITIAL_QUICK_REPLIES,
   timestamp: new Date(),
 };
@@ -117,6 +117,8 @@ export default function ChatWidget() {
       selected_style: (ctx.selectedStyles && ctx.selectedStyles.length > 0) ? ctx.selectedStyles.join(", ").replace(/_/g, " ") : undefined,
       occasion: ctx.occasion ?? undefined,
       current_step: ctx.currentStep,
+      active_garment: ctx.activeWardrobeId ? ctx.wardrobe.find(w => w.id === ctx.activeWardrobeId)?.style : undefined,
+      generated_garments: ctx.wardrobe.map(w => w.style).join(", ") || undefined,
     };
   }, [getBobContext]);
 

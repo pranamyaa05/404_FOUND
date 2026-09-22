@@ -1,5 +1,5 @@
 """
-StitchSmart — FastAPI Backend Entry Point
+GarmentForge — FastAPI Backend Entry Point
 -----------------------------------------
 Run with:
     uvicorn main:app --reload
@@ -38,17 +38,17 @@ os.makedirs(_TEMP_DIR, exist_ok=True)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle events on startup/shutdown."""
-    logger.info("StitchSmart backend starting up.")
+    logger.info("GarmentForge backend starting up.")
     logger.info("uploads dir : %s", _UPLOADS_DIR)
     logger.info("temp dir    : %s", _TEMP_DIR)
     yield
-    logger.info("StitchSmart backend shut down.")
+    logger.info("GarmentForge backend shut down.")
     # cleanup on shutdown (optional)
 
 
 app = FastAPI(
-    title="StitchSmart API",
-    description="Backend for the StitchSmart AI tailoring assistant.",
+    title="GarmentForge API",
+    description="Backend for the GarmentForge AI tailoring assistant.",
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -77,7 +77,7 @@ app.include_router(styles_router.router, tags=["Dress Styles"])
 
 @app.get("/", tags=["Health"])
 def root():
-    return {"status": "ok", "message": "StitchSmart API is running."}
+    return {"status": "ok", "message": "GarmentForge API is running."}
 
 
 @app.get("/health", tags=["Health"])

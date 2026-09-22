@@ -173,6 +173,8 @@ export interface BobUserContext {
   selected_style?: string;        // e.g. "kurta"
   occasion?: string;              // e.g. "wedding"
   current_step?: number;          // 0–4, which studio step they're on
+  active_garment?: string;
+  generated_garments?: string;
 }
 
 export async function chat(

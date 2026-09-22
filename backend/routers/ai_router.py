@@ -34,6 +34,8 @@ class UserContext(BaseModel):
     selected_style: Optional[str] = None      # e.g. "kurta"
     occasion: Optional[str] = None
     current_step: int = 0
+    active_garment: Optional[str] = None
+    generated_garments: Optional[str] = None
 
 
 # ─── Chat ─────────────────────────────────────────────────────────────

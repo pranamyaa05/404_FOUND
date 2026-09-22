@@ -115,6 +115,8 @@ class UserContext:
         self.selected_style: str | None   = data.get("selected_style")
         self.occasion: str | None         = data.get("occasion")
         self.current_step: int            = data.get("current_step", 0)
+        self.active_garment: str | None   = data.get("active_garment")
+        self.generated_garments: str | None = data.get("generated_garments")
 
     def summary(self) -> str:
         """Human-readable summary injected into every prompt."""
@@ -136,6 +138,10 @@ class UserContext:
         step_names = ["Style selection", "Image upload", "Measurements", "3D preview", "Pattern download"]
         step_label = step_names[self.current_step] if self.current_step < len(step_names) else "Unknown"
         parts.append(f"Current app step: {step_label}")
+        if self.generated_garments:
+            parts.append(f"Generated 3D Garments: {self.generated_garments}")
+        if self.active_garment:
+            parts.append(f"Active Selected Garment: {self.active_garment}")
         return "\n".join(f"  - {p}" for p in parts) if parts else "  - No profile data yet"
 
 

@@ -43,6 +43,8 @@ export interface BobContext {
   selectedStyles: string[];
   currentStep: number;
   occasion: string | null;
+  wardrobe: WardrobeItem[];
+  activeWardrobeId: string | null;
 }
 
 interface StudioState {
@@ -154,6 +156,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       selectedStyles: s.selectedStyles,
       currentStep: s.currentStep,
       occasion: s.occasion,
+      wardrobe: s.wardrobe,
+      activeWardrobeId: s.activeWardrobeId,
     };
   },
 
